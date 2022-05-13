@@ -5,6 +5,7 @@ import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -47,7 +48,8 @@ public class PathFinder extends Application {
         EventHandler<ActionEvent> buttonsEvent = new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent actionEvent){
-                testSelected.setText(fileCombobox.getValue() + " is selected");
+                Alert msgBox = new Alert(Alert.AlertType.INFORMATION, "One of the buttons is pressed");
+                msgBox.showAndWait();
             }
         };
         // sticks root pane to top border
