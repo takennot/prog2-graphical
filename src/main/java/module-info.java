@@ -12,4 +12,5 @@ module com.example.prog2graphical {
 
     opens com.example.prog2graphical to javafx.fxml;
     exports com.example.prog2graphical;
+    exports primary;
 }
