@@ -25,7 +25,6 @@ public class PathFinder extends Application {
     public void start(Stage primaryStage) {
         //our main pane idk
         BorderPane root = new BorderPane();
-
         //title of stage
         primaryStage.setTitle("PathFinder");
 
@@ -45,6 +44,11 @@ public class PathFinder extends Application {
         };
         fileCombobox.setOnAction(fileEvent);
         // second event handler event for buttons
+
+        // sticks root pane to top border
+        root.setTop(fileCombobox);
+        root.setRight(testSelected);
+        // button event handler
         EventHandler<ActionEvent> buttonsEvent = new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent actionEvent){
@@ -52,31 +56,33 @@ public class PathFinder extends Application {
                 msgBox.showAndWait();
             }
         };
-        // sticks root pane to top border
-        root.setTop(fileCombobox);
-
         //FlowPane for buttons
         Pane buttonsFlowPane = new FlowPane();
 
         //button Find Path
         Button findPathButton = new Button("Find Path");
         buttonsFlowPane.getChildren().add(findPathButton);
+        findPathButton.setOnAction(buttonsEvent);
 
         //button Show Connection
         Button showConnectionButton = new Button("Show Connection");
         buttonsFlowPane.getChildren().add(showConnectionButton);
+        showConnectionButton.setOnAction(buttonsEvent);
 
         //button New Place
         Button newPlaceButton = new Button("New Place");
         buttonsFlowPane.getChildren().add(newPlaceButton);
+        newPlaceButton.setOnAction(buttonsEvent);
 
         //button New Connection
         Button newConnection = new Button("New Connection");
         buttonsFlowPane.getChildren().add(newConnection);
+        newConnection.setOnAction(buttonsEvent);
 
         //button Change Connection
         Button changeConnection = new Button("Change Connection");
         buttonsFlowPane.getChildren().add(changeConnection);
+        changeConnection.setOnAction(buttonsEvent);
 
         root.setCenter(buttonsFlowPane);
 
