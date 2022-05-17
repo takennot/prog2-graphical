@@ -9,6 +9,8 @@ module com.example.prog2graphical {
     requires org.kordamp.ikonli.javafx;
     requires org.kordamp.bootstrapfx.core;
     requires eu.hansolo.tilesfx;
+    requires org.junit.jupiter.api;
+    requires org.junit.jupiter.params;
 
     opens com.example.prog2graphical to javafx.fxml;
     exports com.example.prog2graphical;

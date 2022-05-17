@@ -15,6 +15,8 @@ import javafx.stage.Stage;
 
 public class PathFinder extends Application {
 
+    private boolean hasExpandedHeightOnce = false;
+
     public static void main(String[] args) {
         Application.launch(args);
     }
@@ -101,9 +103,11 @@ public class PathFinder extends Application {
 
         root.setCenter(buttonsFlowPane);
 
-        primaryStage.setScene(new Scene(root, 618, 100));
+        primaryStage.setScene(new Scene(root, 618, 50));
         primaryStage.setResizable(false);
         primaryStage.show();
+
+        //primaryStage.setHeight(50 + buttonsFlowPane.getHeight() + menuBar.getHeight());
     }
 
     //"New Map", "Open", "Save", "Save Image", "Exit"
@@ -111,7 +115,11 @@ public class PathFinder extends Application {
         Image imageMap = new Image("file:europa.gif");
         imageView = new ImageView(imageMap);
         root.setBottom(imageView);
-        primaryStage.setHeight(780); //729
+
+        if (hasExpandedHeightOnce == false){
+            primaryStage.setHeight(primaryStage.getHeight() + imageMap.getHeight()); //729
+            hasExpandedHeightOnce = true;
+        }
     }
 
     private void open(){
