@@ -15,6 +15,8 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.controlsfx.control.action.Action;
 
+import java.io.File;
+
 public class PathFinder extends Application {
 
     public static void main(String[] args) {
@@ -28,9 +30,8 @@ public class PathFinder extends Application {
         // title of stage
         primaryStage.setTitle("PathFinder");
         // img
-        Image imageMap = new Image("file:empty.jpg");
+        Image imageMap = new Image("file:primary/europa.gif");
         ImageView imageView = new ImageView(imageMap);
-        root.getChildren().add(imageView);
 
         // MenuBar declaration
         MenuBar menuBar = new MenuBar();
@@ -103,8 +104,9 @@ public class PathFinder extends Application {
         changeConnection.setOnAction(buttonsEvent);
 
         root.setCenter(buttonsFlowPane);
+        root.setBottom(imageView);
 
-        primaryStage.setScene(new Scene(root, 300, 250));
+        primaryStage.setScene(new Scene(root, 400, 300));
         primaryStage.show();
     }
 
