@@ -7,6 +7,7 @@ import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Pane;
@@ -28,6 +29,8 @@ public class PathFinder extends Application {
         primaryStage.setTitle("PathFinder");
         // img
         Image imageMap = new Image("file:empty.jpg");
+        ImageView imageView = new ImageView(imageMap);
+        root.getChildren().add(imageView);
 
         // MenuBar declaration
         MenuBar menuBar = new MenuBar();
