@@ -5,13 +5,12 @@ import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
+import javafx.scene.control.*;
+import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.controlsfx.control.action.Action;
 
@@ -23,31 +22,46 @@ public class PathFinder extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        //our main pane idk
+        // root pane
         BorderPane root = new BorderPane();
-        //title of stage
+        // title of stage
         primaryStage.setTitle("PathFinder");
+        // img
+        Image imageMap = new Image("file:empty.jpg");
 
-        //combobox
-        // Array with actions
-        String[] fileActions = {"New Map", "Open", "Save", "Save Image", "Exit"};
-        // combobox declaration
-        ComboBox fileCombobox = new ComboBox(FXCollections.observableArrayList(fileActions));
-        // test label to see if event handler is working
-        Label testSelected = new Label("default selected");
-        // creates action event
-        EventHandler<ActionEvent> fileEvent = new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent){
-                testSelected.setText(fileCombobox.getValue() + " is selected");
-            }
-        };
-        fileCombobox.setOnAction(fileEvent);
-        // second event handler event for buttons
+        // MenuBar declaration
+        MenuBar menuBar = new MenuBar();
+        VBox fileVBox = new VBox();
+        fileVBox.getChildren().add(menuBar);
 
-        // sticks root pane to top border
-        root.setTop(fileCombobox);
-        root.setRight(testSelected);
+        // "file"-menu declaration
+        Menu fileMenu = new Menu("File");
+        menuBar.getMenus().add(fileMenu);
+
+        // "file"-menu items declarations
+        MenuItem newMapItem = new MenuItem("New Map");
+        fileMenu.getItems().add(newMapItem);
+        newMapItem.setOnAction(e -> newMap());
+
+        MenuItem openItem = new MenuItem("Open");
+        fileMenu.getItems().add(openItem);
+        openItem.setOnAction(e -> open());
+
+        MenuItem saveItem = new MenuItem("Save");
+        fileMenu.getItems().add(saveItem);
+        saveItem.setOnAction(e -> save());
+
+        MenuItem saveImageItem = new MenuItem("Save Image");
+        fileMenu.getItems().add(saveImageItem);
+        saveImageItem.setOnAction(e -> saveImage());
+
+        MenuItem exitItem = new MenuItem("Exit");
+        fileMenu.getItems().add(exitItem);
+        exitItem.setOnAction(e -> System.exit(0));
+
+        // sticks the file's combobox to TOP border of root
+        root.setTop(menuBar);
+
         // button event handler
         EventHandler<ActionEvent> buttonsEvent = new EventHandler<ActionEvent>() {
             @Override
@@ -56,6 +70,7 @@ public class PathFinder extends Application {
                 msgBox.showAndWait();
             }
         };
+
         //FlowPane for buttons
         Pane buttonsFlowPane = new FlowPane();
 
@@ -88,5 +103,23 @@ public class PathFinder extends Application {
 
         primaryStage.setScene(new Scene(root, 300, 250));
         primaryStage.show();
+    }
+
+    //"New Map", "Open", "Save", "Save Image", "Exit"
+    private void newMap(){
+        Alert msgBox = new Alert(Alert.AlertType.INFORMATION, "New Map is pressed");
+        msgBox.showAndWait();
+
+        //F13 (open europa.gif här)
+
+    }
+    private void open(){
+
+    }
+    private void save(){
+
+    }
+    private void saveImage(){
+        //F15
     }
 }
