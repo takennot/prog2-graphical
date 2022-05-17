@@ -1,7 +1,6 @@
 package primary;
 
 import javafx.application.Application;
-import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
@@ -13,9 +12,6 @@ import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import org.controlsfx.control.action.Action;
-
-import java.io.File;
 
 public class PathFinder extends Application {
 
@@ -29,9 +25,9 @@ public class PathFinder extends Application {
         BorderPane root = new BorderPane();
         // title of stage
         primaryStage.setTitle("PathFinder");
-        // img
-        Image imageMap = new Image("file:primary/europa.gif");
-        ImageView imageView = new ImageView(imageMap);
+        // Image
+        ImageView imageView = new ImageView();
+        root.setBottom(imageView);
 
         // MenuBar declaration
         MenuBar menuBar = new MenuBar();
@@ -45,7 +41,7 @@ public class PathFinder extends Application {
         // "file"-menu items declarations
         MenuItem newMapItem = new MenuItem("New Map");
         fileMenu.getItems().add(newMapItem);
-        newMapItem.setOnAction(e -> newMap());
+        newMapItem.setOnAction(e -> newMap(root, primaryStage, imageView));
 
         MenuItem openItem = new MenuItem("Open");
         fileMenu.getItems().add(openItem);
@@ -104,26 +100,32 @@ public class PathFinder extends Application {
         changeConnection.setOnAction(buttonsEvent);
 
         root.setCenter(buttonsFlowPane);
-        root.setBottom(imageView);
 
-        primaryStage.setScene(new Scene(root, 400, 300));
+        primaryStage.setScene(new Scene(root, 618, 100));
+        primaryStage.setResizable(false);
         primaryStage.show();
     }
 
     //"New Map", "Open", "Save", "Save Image", "Exit"
-    private void newMap(){
-        Alert msgBox = new Alert(Alert.AlertType.INFORMATION, "New Map is pressed");
-        msgBox.showAndWait();
-
-        //F13 (open europa.gif här)
-
+    private void newMap(BorderPane root, Stage primaryStage, ImageView imageView){
+        Image imageMap = new Image("file:europa.gif");
+        imageView = new ImageView(imageMap);
+        root.setBottom(imageView);
+        primaryStage.setHeight(780); //729
     }
+
     private void open(){
+        //finns "europa.graph"?
+            //nej = ge felmeddelande!
 
+            //ja = hämta/läs in informationen från "europa.graph
+                // ladda in kartan och alla objekt (nodes/places, edges, names?)
     }
+
     private void save(){
 
     }
+
     private void saveImage(){
         //F15
     }
