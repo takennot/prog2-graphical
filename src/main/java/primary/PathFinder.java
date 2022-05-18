@@ -13,9 +13,16 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+
 public class PathFinder extends Application {
 
     private boolean hasExpandedHeightOnce = false;
+    private ListGraph listGraphMap = new ListGraph();
 
     public static void main(String[] args) {
         Application.launch(args);
@@ -122,12 +129,52 @@ public class PathFinder extends Application {
         }
     }
 
-    private void open(){
-        //finns "europa.graph"?
-            //nej = ge felmeddelande!
+    private void open(BorderPane root){
+        ArrayList nodes = new ArrayList();
+        double coordX;
+        double coordY;
+        ImageView imageToDrawOn = new ImageView("file:europa.gif");
+        final double maxX = imageToDrawOn.getImage().getWidth();
+        final double maxY = imageToDrawOn.getImage().getHeight();
 
-            //ja = hämta/läs in informationen från "europa.graph
-                // ladda in kartan och alla objekt (nodes/places, edges, names?)
+        root.getChildren().add(imageToDrawOn);
+
+        // set coordinates to array's 1st and 2nd index (0 is name)
+        coordX = node[]
+
+        //finns "europa.graph"?
+        try (BufferedReader reader = new BufferedReader(new FileReader(new File("europa.graph")))) {
+            //ja = open file
+            String line;
+            int lineNumber = 0;
+
+            while ((line = reader.readLine()) != null){
+                lineNumber++;
+                System.out.println(line);
+
+                if(lineNumber == 1){
+                    //reads file-name
+                    break;
+                }
+                else if(lineNumber == 2){
+                    //läser in noder
+                    String nodeValues[] = line.split(";");
+
+
+                }
+                else if(lineNumber >= 3){
+                    //läser in edges
+                }
+                else{
+                    //blä
+                    break;
+                }
+            }
+
+        } catch (IOException e) {
+            //nej = ge felmeddelande!
+            e.printStackTrace();
+        }
     }
 
     private void save(){
