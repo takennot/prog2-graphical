@@ -11,13 +11,16 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Set;
 
 public class PathFinder extends Application {
 
@@ -54,7 +57,7 @@ public class PathFinder extends Application {
 
         MenuItem openItem = new MenuItem("Open");
         fileMenu.getItems().add(openItem);
-        openItem.setOnAction(e -> open());
+        openItem.setOnAction(e -> open(root));
 
         MenuItem saveItem = new MenuItem("Save");
         fileMenu.getItems().add(saveItem);
@@ -130,17 +133,29 @@ public class PathFinder extends Application {
     }
 
     private void open(BorderPane root){
-        ArrayList nodes = new ArrayList();
-        double coordX;
-        double coordY;
-        ImageView imageToDrawOn = new ImageView("file:europa.gif");
-        final double maxX = imageToDrawOn.getImage().getWidth();
-        final double maxY = imageToDrawOn.getImage().getHeight();
-
-        root.getChildren().add(imageToDrawOn);
-
-        // set coordinates to array's 1st and 2nd index (0 is name)
-        coordX = node[]
+//        ArrayList node = new ArrayList();
+//        Circle city = new Circle();
+//        double coordX;
+//        double coordY;
+//        ImageView imageToDrawOn = new ImageView("file:europa.gif");
+//        final double maxX = imageToDrawOn.getImage().getWidth();
+//        final double maxY = imageToDrawOn.getImage().getHeight();
+//
+//        root.getChildren().add(imageToDrawOn);
+//
+//        // place this shit in some loop idk
+//        // set coordinates to array's 1st and 2nd index (0 is name)
+//        coordX = (double) node.get(1);
+//        coordY = (double) node.get(2);
+//        city.setCenterX(coordX);
+//        city.setCenterY(coordY);
+//        city.setRadius(10);
+//        // get list of cities
+//        // foreach city in cities
+//        // get edges from current city
+//        // foreach edge in currentCityEdgeList
+//        // get destination of said edge
+//        // Draw line from city to destination?
 
         //finns "europa.graph"?
         try (BufferedReader reader = new BufferedReader(new FileReader(new File("europa.graph")))) {
@@ -154,27 +169,64 @@ public class PathFinder extends Application {
 
                 if(lineNumber == 1){
                     //reads file-name
-                    break;
                 }
                 else if(lineNumber == 2){
                     //läser in noder
                     String nodeValues[] = line.split(";");
 
+                    //skriv ut alla värden
+                    for (String s : nodeValues) {
+                        System.out.println(s);
+                    }
 
+                    //sätt ihop värdena och lägg till alla noder i ListGraph:en
+                    for (int i = 0; i < nodeValues.length; i += 3) {
+                        City newNode = new City(nodeValues[i], Float.parseFloat(nodeValues[i+1]), Float.parseFloat(nodeValues[i+2]));
+                        listGraphMap.add(newNode);
+                    }
                 }
                 else if(lineNumber >= 3){
                     //läser in edges
-                }
-                else{
-                    //blä
-                    break;
+                    String edgeValues[] = line.split(";");
+
+                    Set<City> nodesSet = listGraphMap.getNodes();
+
+                    Object[] nodes = nodesSet.toArray();
+
+                    City[] nodesClone = new City[nodes.length];
+                    int bruh = 0;
+                    for (Object o : nodes){
+                        nodesClone[bruh++] = (City) o;
+                    }
+
+                    for (int i = 0; i < edgeValues.length; i += 4) {
+                        int firstCityIndex = -1; //FIXA SÅ DET INTE ÄR -1!!!!!!!!
+                        int secondCityIndex = -1; //FIXA SÅ DET INTE ÄR -1!!!!!!!!
+
+                        for (int j = 0; j < nodes.length; j++) {
+                            if(nodesClone[j].getName().equals(edgeValues[i])){
+                                firstCityIndex = j;
+                            }
+                            else if(nodesClone[j].getName().equals(edgeValues[i+1])){
+                                secondCityIndex = j;
+                            }
+                        }
+
+                        listGraphMap.connect(nodesClone[firstCityIndex], nodesClone[secondCityIndex], edgeValues[i+2], Integer.parseInt(edgeValues[i+3]));
+                    }
                 }
             }
-
         } catch (IOException e) {
             //nej = ge felmeddelande!
             e.printStackTrace();
+            System.out.println("europa.graph not found");
         }
+
+        //skriver ut ListGraph för att se att allt stämmer
+        System.out.println(listGraphMap.toString());
+
+        //draw it out
+        drawListGraph();
     }
 
     private void save(){
@@ -183,5 +235,14 @@ public class PathFinder extends Application {
 
     private void saveImage(){
         //F15
+    }
+
+    private void drawListGraph(){
+        //create a canvas
+
+        //draw nodes/Cities on a canvas
+            //write labels with names under the nodes
+
+        //draw edges on canvas
     }
 }

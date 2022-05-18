@@ -39,7 +39,7 @@ public class ListGraph<T> implements Graph<T>, Serializable {
 
         //If one of the nodes does not exist - NoSuchElementException from java.util should be thrown.
         if(!nodes.containsKey(cityOne) || !nodes.containsKey(cityTwo)){
-            throw new NoSuchElementException("HashMap does not contain one of the cities!");
+            throw new NoSuchElementException("HashMap does not contain one of the cities! (1: " + cityOne.toString() + " 2: " + cityTwo.toString() + ")");
         }
         // If the weight is negative - IllegalArgumentException should be thrown.
         if(weight < 0){
