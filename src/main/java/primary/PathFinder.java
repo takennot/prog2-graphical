@@ -23,6 +23,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 public class PathFinder extends Application {
@@ -232,7 +234,7 @@ public class PathFinder extends Application {
         System.out.println(listGraphMap.toString());
 
         //draw it out
-        drawListGraph(root);
+        drawListGraph();
     }
 
     private void save(){
@@ -243,46 +245,39 @@ public class PathFinder extends Application {
         //F15
     }
 
-    private void drawListGraph(BorderPane root){
+    private void drawListGraph(){
+        //TODO: lines and nodes overlap. FIX IT!
+        //TODO: ska dom ens ritas ut 2 gånger? kan vi fixa det på något sätt?
+
         //create a canvas
         Canvas canvas = new Canvas(618,729);
         GraphicsContext gc = canvas.getGraphicsContext2D();
-        //root.getChildren().add(canvas);
-
-        gc.setStroke(Color.BLUE);
         gc.moveTo(0,0);
-        // lineTo city1
-        //gc.lineTo(470,242);
         gc.stroke();
 
-        int radius = 7.5;
+        int radius = 10;
         int diameter = radius * 2;
 
-        //Stockholm
-        gc.setFill(Color.BLUE);
-        //gc.fillOval(470.0 - radius, 242.0- radius, diameter, diameter);
-        //Berlin
-        //gc.fillOval(411.0 - radius, 368.0 - radius, diameter, diameter);
-
+        //draw nodes and edges on a canvas
         Set<City> nodes = listGraphMap.getNodes();
         gc.setFill(Color.BLUE);
         for (City c : nodes) {
+            //draw edges from city
+            gc.setStroke(Color.BLACK);
+            gc.setLineWidth(3);
+
+            Collection<Edge> edgesFromCity =  listGraphMap.getEdgesFrom(c); //funkar detta?
+            for (Edge e : edgesFromCity) {
+                City cityTo = (City) e.getDestination();
+                gc.strokeLine(c.getX(), c.getY(), cityTo.getX(), cityTo.getY());
+            }
+
+            //draw node
             gc.fillOval(c.getX() - radius, c.getY() - radius, diameter, diameter);
         }
+        //write labels with city names under the nodes
 
+        //draw it on canvas
         bottom.getChildren().add(canvas);
-        //draw nodes/Cities on a canvas
-            //write labels with names under the nodes
-
-        //draw edges on canvas
     }
-
-//    private class Node extends Canvas{
-//        public Node(double x, double y){
-//            super(x, y);
-//            GraphicsContext gc = getGraphicsContext2D();
-//            gc.setFill(Color.BLUE);
-//            gc.fillOval(getLayoutX(), getLayoutY(), 20, 20);
-//        }
-//    }
 }
