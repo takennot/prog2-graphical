@@ -4,14 +4,17 @@ import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.FlowPane;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.shape.Circle;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.paint.Color;
+
 import javafx.stage.Stage;
 
 import java.io.BufferedReader;
@@ -26,6 +29,7 @@ public class PathFinder extends Application {
 
     private boolean hasExpandedHeightOnce = false;
     private ListGraph listGraphMap = new ListGraph();
+    private Pane bottom;
 
     public static void main(String[] args) {
         Application.launch(args);
@@ -38,8 +42,10 @@ public class PathFinder extends Application {
         // title of stage
         primaryStage.setTitle("PathFinder");
         // Image
+        bottom = new Pane();
         ImageView imageView = new ImageView();
-        root.setBottom(imageView);
+        bottom.getChildren().add(imageView);
+        root.setBottom(bottom);
 
         // MenuBar declaration
         MenuBar menuBar = new MenuBar();
@@ -124,7 +130,7 @@ public class PathFinder extends Application {
     private void newMap(BorderPane root, Stage primaryStage, ImageView imageView){
         Image imageMap = new Image("file:europa.gif");
         imageView = new ImageView(imageMap);
-        root.setBottom(imageView);
+        bottom.getChildren().add(imageView);
 
         if (hasExpandedHeightOnce == false){
             primaryStage.setHeight(primaryStage.getHeight() + imageMap.getHeight()); //729
@@ -226,7 +232,7 @@ public class PathFinder extends Application {
         System.out.println(listGraphMap.toString());
 
         //draw it out
-        drawListGraph();
+        drawListGraph(root);
     }
 
     private void save(){
@@ -237,12 +243,46 @@ public class PathFinder extends Application {
         //F15
     }
 
-    private void drawListGraph(){
+    private void drawListGraph(BorderPane root){
         //create a canvas
+        Canvas canvas = new Canvas(618,729);
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+        //root.getChildren().add(canvas);
 
+        gc.setStroke(Color.BLUE);
+        gc.moveTo(0,0);
+        // lineTo city1
+        //gc.lineTo(470,242);
+        gc.stroke();
+
+        int radius = 7.5;
+        int diameter = radius * 2;
+
+        //Stockholm
+        gc.setFill(Color.BLUE);
+        //gc.fillOval(470.0 - radius, 242.0- radius, diameter, diameter);
+        //Berlin
+        //gc.fillOval(411.0 - radius, 368.0 - radius, diameter, diameter);
+
+        Set<City> nodes = listGraphMap.getNodes();
+        gc.setFill(Color.BLUE);
+        for (City c : nodes) {
+            gc.fillOval(c.getX() - radius, c.getY() - radius, diameter, diameter);
+        }
+
+        bottom.getChildren().add(canvas);
         //draw nodes/Cities on a canvas
             //write labels with names under the nodes
 
         //draw edges on canvas
     }
+
+//    private class Node extends Canvas{
+//        public Node(double x, double y){
+//            super(x, y);
+//            GraphicsContext gc = getGraphicsContext2D();
+//            gc.setFill(Color.BLUE);
+//            gc.fillOval(getLayoutX(), getLayoutY(), 20, 20);
+//        }
+//    }
 }
