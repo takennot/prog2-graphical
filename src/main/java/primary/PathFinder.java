@@ -3,6 +3,7 @@ package primary;
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -22,16 +23,17 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
 
 public class PathFinder extends Application {
 
     private boolean hasExpandedHeightOnce = false;
-    private ListGraph listGraphMap = new ListGraph();
+    private ListGraph activeListGraphMap = new ListGraph();
     private Pane bottom;
+    private Canvas canvas;
 
     public static void main(String[] args) {
         Application.launch(args);
@@ -130,41 +132,44 @@ public class PathFinder extends Application {
 
     //"New Map", "Open", "Save", "Save Image", "Exit"
     private void newMap(BorderPane root, Stage primaryStage, ImageView imageView){
+
         Image imageMap = new Image("file:europa.gif");
         imageView = new ImageView(imageMap);
         bottom.getChildren().add(imageView);
 
-        if (hasExpandedHeightOnce == false){
+        boolean okayToClearListMap = true;
+
+        if(bottom.getChildren().contains(canvas)) {
+            //ask to save changes
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Confirmation");
+            alert.setHeaderText("Create a new map without saving this one first?");
+            alert.setContentText("Are you sure?");
+
+            Optional<ButtonType> svar = alert.showAndWait();
+            if (svar.isPresent() && svar.get() == ButtonType.OK)
+                okayToClearListMap = true;
+        }
+        else{
+            okayToClearListMap = false;
+        }
+
+        //clear map
+        if (okayToClearListMap) {
+            //clear canvas
+            clearCanvas();
+
+            //clear ListGraph
+            activeListGraphMap = new ListGraph();
+        }
+
+        if (!hasExpandedHeightOnce){
             primaryStage.setHeight(primaryStage.getHeight() + imageMap.getHeight()); //729
             hasExpandedHeightOnce = true;
         }
     }
 
     private void open(BorderPane root){
-//        ArrayList node = new ArrayList();
-//        Circle city = new Circle();
-//        double coordX;
-//        double coordY;
-//        ImageView imageToDrawOn = new ImageView("file:europa.gif");
-//        final double maxX = imageToDrawOn.getImage().getWidth();
-//        final double maxY = imageToDrawOn.getImage().getHeight();
-//
-//        root.getChildren().add(imageToDrawOn);
-//
-//        // place this shit in some loop idk
-//        // set coordinates to array's 1st and 2nd index (0 is name)
-//        coordX = (double) node.get(1);
-//        coordY = (double) node.get(2);
-//        city.setCenterX(coordX);
-//        city.setCenterY(coordY);
-//        city.setRadius(10);
-//        // get list of cities
-//        // foreach city in cities
-//        // get edges from current city
-//        // foreach edge in currentCityEdgeList
-//        // get destination of said edge
-//        // Draw line from city to destination?
-
         //finns "europa.graph"?
         try (BufferedReader reader = new BufferedReader(new FileReader(new File("europa.graph")))) {
             //ja = open file
@@ -190,14 +195,14 @@ public class PathFinder extends Application {
                     //sätt ihop värdena och lägg till alla noder i ListGraph:en
                     for (int i = 0; i < nodeValues.length; i += 3) {
                         City newNode = new City(nodeValues[i], Float.parseFloat(nodeValues[i+1]), Float.parseFloat(nodeValues[i+2]));
-                        listGraphMap.add(newNode);
+                        activeListGraphMap.add(newNode);
                     }
                 }
                 else if(lineNumber >= 3){
                     //läser in edges
                     String edgeValues[] = line.split(";");
 
-                    Set<City> nodesSet = listGraphMap.getNodes();
+                    Set<City> nodesSet = activeListGraphMap.getNodes();
 
                     Object[] nodes = nodesSet.toArray();
 
@@ -220,7 +225,7 @@ public class PathFinder extends Application {
                             }
                         }
 
-                        listGraphMap.connect(nodesClone[firstCityIndex], nodesClone[secondCityIndex], edgeValues[i+2], Integer.parseInt(edgeValues[i+3]));
+                        activeListGraphMap.connect(nodesClone[firstCityIndex], nodesClone[secondCityIndex], edgeValues[i+2], Integer.parseInt(edgeValues[i+3]));
                     }
                 }
             }
@@ -231,18 +236,29 @@ public class PathFinder extends Application {
         }
 
         //skriver ut ListGraph för att se att allt stämmer
-        System.out.println(listGraphMap.toString());
+        System.out.println(activeListGraphMap.toString());
 
         //draw it out
         drawListGraph();
     }
 
     private void save(){
-
+        Path file = Paths.get("hellothere.txt");
+        if(!Files.exists(file)) {
+            try {
+                Files.createFile(file.toAbsolutePath());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private void saveImage(){
         //F15
+    }
+
+    private void clearCanvas(){
+        bottom.getChildren().remove(canvas);
     }
 
     private void drawListGraph(){
@@ -250,7 +266,7 @@ public class PathFinder extends Application {
         //TODO: ska dom ens ritas ut 2 gånger? kan vi fixa det på något sätt?
 
         //create a canvas
-        Canvas canvas = new Canvas(618,729);
+        canvas = new Canvas(618,729);
         GraphicsContext gc = canvas.getGraphicsContext2D();
         gc.moveTo(0,0);
         gc.stroke();
@@ -259,14 +275,14 @@ public class PathFinder extends Application {
         int diameter = radius * 2;
 
         //draw nodes and edges on a canvas
-        Set<City> nodes = listGraphMap.getNodes();
+        Set<City> nodes = activeListGraphMap.getNodes();
         gc.setFill(Color.BLUE);
         for (City c : nodes) {
             //draw edges from city
             gc.setStroke(Color.BLACK);
             gc.setLineWidth(3);
 
-            Collection<Edge> edgesFromCity =  listGraphMap.getEdgesFrom(c); //funkar detta?
+            Collection<Edge> edgesFromCity =  activeListGraphMap.getEdgesFrom(c); //funkar detta?
             for (Edge e : edgesFromCity) {
                 City cityTo = (City) e.getDestination();
                 gc.strokeLine(c.getX(), c.getY(), cityTo.getX(), cityTo.getY());
