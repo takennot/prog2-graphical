@@ -18,10 +18,7 @@ import javafx.scene.paint.Color;
 
 import javafx.stage.Stage;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.lang.reflect.Array;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -34,6 +31,8 @@ public class PathFinder extends Application {
     private ListGraph activeListGraphMap = new ListGraph();
     private Pane bottom;
     private Canvas canvas;
+    private Stage mainStage;
+    private ImageView imageView;
 
     public static void main(String[] args) {
         Application.launch(args);
@@ -41,13 +40,16 @@ public class PathFinder extends Application {
 
     @Override
     public void start(Stage primaryStage) {
+        //Stage
+        mainStage = primaryStage;
+
         // root pane
         BorderPane root = new BorderPane();
         // title of stage
-        primaryStage.setTitle("PathFinder");
+        mainStage.setTitle("PathFinder");
         // Image
         bottom = new Pane();
-        ImageView imageView = new ImageView();
+        imageView = new ImageView();
         bottom.getChildren().add(imageView);
         root.setBottom(bottom);
 
@@ -63,7 +65,7 @@ public class PathFinder extends Application {
         // "file"-menu items declarations
         MenuItem newMapItem = new MenuItem("New Map");
         fileMenu.getItems().add(newMapItem);
-        newMapItem.setOnAction(e -> newMap(root, primaryStage, imageView));
+        newMapItem.setOnAction(e -> newMap(root));
 
         MenuItem openItem = new MenuItem("Open");
         fileMenu.getItems().add(openItem);
@@ -131,28 +133,12 @@ public class PathFinder extends Application {
     }
 
     //"New Map", "Open", "Save", "Save Image", "Exit"
-    private void newMap(BorderPane root, Stage primaryStage, ImageView imageView){
+    private void newMap(BorderPane root){
 
-        Image imageMap = new Image("file:europa.gif");
-        imageView = new ImageView(imageMap);
-        bottom.getChildren().add(imageView);
+        setBackgroundImage("file:europa.gif");
 
         boolean okayToClearListMap = true;
-
-        if(bottom.getChildren().contains(canvas)) {
-            //ask to save changes
-            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-            alert.setTitle("Confirmation");
-            alert.setHeaderText("Create a new map without saving this one first?");
-            alert.setContentText("Are you sure?");
-
-            Optional<ButtonType> svar = alert.showAndWait();
-            if (svar.isPresent() && svar.get() == ButtonType.OK)
-                okayToClearListMap = true;
-        }
-        else{
-            okayToClearListMap = false;
-        }
+        okayToClearListMap = openAFileAlert("Create a new map without saving this one first?");
 
         //clear map
         if (okayToClearListMap) {
@@ -160,97 +146,151 @@ public class PathFinder extends Application {
             clearCanvas();
 
             //clear ListGraph
-            activeListGraphMap = new ListGraph();
+            clearListGraph();
+        }
+    }
+
+    private boolean openAFileAlert(String header){
+        if(bottom.getChildren().contains(canvas)) {
+            //ask to save changes
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Confirmation");
+            alert.setHeaderText(header);
+            alert.setContentText("Are you sure?");
+
+            Optional<ButtonType> svar = alert.showAndWait();
+            if (svar.isPresent() && svar.get() == ButtonType.CANCEL)
+                return false;
         }
 
+        return true;
+    }
+
+    private void setBackgroundImage(String fileName){
+        Image imageMap = new Image("file:europa.gif");
+        imageView = new ImageView(imageMap);
+        bottom.getChildren().add(imageView);
+
         if (!hasExpandedHeightOnce){
-            primaryStage.setHeight(primaryStage.getHeight() + imageMap.getHeight()); //729
+            mainStage.setHeight(mainStage.getHeight() + imageMap.getHeight()); //729
             hasExpandedHeightOnce = true;
         }
     }
 
     private void open(BorderPane root){
-        //finns "europa.graph"?
-        try (BufferedReader reader = new BufferedReader(new FileReader(new File("europa.graph")))) {
-            //ja = open file
-            String line;
-            int lineNumber = 0;
+        boolean okayToOpen = openAFileAlert("Open a file without saving this one first?");
 
-            while ((line = reader.readLine()) != null){
-                lineNumber++;
-                System.out.println(line);
+        if(okayToOpen) {
 
-                if(lineNumber == 1){
-                    //reads file-name
-                }
-                else if(lineNumber == 2){
-                    //läser in noder
-                    String nodeValues[] = line.split(";");
+            //clear canvas
+            clearCanvas();
+            //clear ListGraph
+            clearListGraph();
 
-                    //skriv ut alla värden
-                    for (String s : nodeValues) {
-                        System.out.println(s);
-                    }
+            //finns "europa.graph"?
+            try (BufferedReader reader = new BufferedReader(new FileReader(new File("europa.graph")))) {
+                //ja = open file
+                String line;
+                int lineNumber = 0;
 
-                    //sätt ihop värdena och lägg till alla noder i ListGraph:en
-                    for (int i = 0; i < nodeValues.length; i += 3) {
-                        City newNode = new City(nodeValues[i], Float.parseFloat(nodeValues[i+1]), Float.parseFloat(nodeValues[i+2]));
-                        activeListGraphMap.add(newNode);
-                    }
-                }
-                else if(lineNumber >= 3){
-                    //läser in edges
-                    String edgeValues[] = line.split(";");
+                while((line = reader.readLine()) != null){
+                    lineNumber++;
+                    System.out.println(line);
 
-                    Set<City> nodesSet = activeListGraphMap.getNodes();
+                    if (lineNumber == 1) {
+                        //reads file-name
+                        setBackgroundImage(line);
+                    } else if (lineNumber == 2) {
+                        //läser in noder
+                        String nodeValues[] = line.split(";");
 
-                    Object[] nodes = nodesSet.toArray();
-
-                    City[] nodesClone = new City[nodes.length];
-                    int bruh = 0;
-                    for (Object o : nodes){
-                        nodesClone[bruh++] = (City) o;
-                    }
-
-                    for (int i = 0; i < edgeValues.length; i += 4) {
-                        int firstCityIndex = -1; //FIXA SÅ DET INTE ÄR -1!!!!!!!!
-                        int secondCityIndex = -1; //FIXA SÅ DET INTE ÄR -1!!!!!!!!
-
-                        for (int j = 0; j < nodes.length; j++) {
-                            if(nodesClone[j].getName().equals(edgeValues[i])){
-                                firstCityIndex = j;
-                            }
-                            else if(nodesClone[j].getName().equals(edgeValues[i+1])){
-                                secondCityIndex = j;
-                            }
+                        //skriv ut alla värden
+                        for (String s : nodeValues) {
+                            System.out.println(s);
                         }
 
-                        activeListGraphMap.connect(nodesClone[firstCityIndex], nodesClone[secondCityIndex], edgeValues[i+2], Integer.parseInt(edgeValues[i+3]));
+                        //sätt ihop värdena och lägg till alla noder i ListGraph:en
+                        for (int i = 0; i < nodeValues.length; i += 3) {
+                            City newNode = new City(nodeValues[i], Float.parseFloat(nodeValues[i + 1]), Float.parseFloat(nodeValues[i + 2]));
+                            activeListGraphMap.add(newNode);
+                        }
+                    } else if (lineNumber >= 3) {
+                        //läser in edges
+                        String edgeValues[] = line.split(";");
+
+                        Set<City> nodesSet = activeListGraphMap.getNodes();
+
+                        Object[] nodes = nodesSet.toArray();
+
+                        City[] nodesClone = new City[nodes.length];
+                        int index = 0;
+                        for (Object o : nodes) {
+                            nodesClone[index++] = (City) o;
+                        }
+
+                        for (int i = 0; i < edgeValues.length; i += 4) {
+                            int firstCityIndex = -1; //FIXA SÅ DET INTE ÄR -1!!!!!!!!
+                            int secondCityIndex = -1; //FIXA SÅ DET INTE ÄR -1!!!!!!!!
+
+                            for (int j = 0; j < nodes.length; j++) {
+                                if (nodesClone[j].getName().equals(edgeValues[i])) {
+                                    firstCityIndex = j;
+                                } else if (nodesClone[j].getName().equals(edgeValues[i + 1])) {
+                                    secondCityIndex = j;
+                                }
+                            }
+                            //TODO: check if the cities are already connected - then dont do shit
+                            if(!activeListGraphMap.pathExists(nodesClone[firstCityIndex], nodesClone[secondCityIndex]))
+                                activeListGraphMap.connect(nodesClone[firstCityIndex], nodesClone[secondCityIndex], edgeValues[i + 2], Integer.parseInt(edgeValues[i + 3]));
+                        }
                     }
                 }
+            } catch (IOException e) {
+                //nej = ge felmeddelande!
+                e.printStackTrace();
+                System.out.println("europa.graph not found");
             }
-        } catch (IOException e) {
-            //nej = ge felmeddelande!
-            e.printStackTrace();
-            System.out.println("europa.graph not found");
+
+            //skriver ut ListGraph för att se att allt stämmer
+            System.out.println(activeListGraphMap.toString());
+
+            //draw it out
+            drawListGraph();
         }
-
-        //skriver ut ListGraph för att se att allt stämmer
-        System.out.println(activeListGraphMap.toString());
-
-        //draw it out
-        drawListGraph();
     }
 
     private void save(){
         Path file = Paths.get("hellothere.txt");
         if(!Files.exists(file)) {
-            try {
-                Files.createFile(file.toAbsolutePath());
+            try (BufferedWriter bw = new BufferedWriter(new FileWriter("hellothere.txt", true))) {
+                bw.write("file URL here");
+                bw.newLine();
+                bw.write("long line with nodes here");
+                bw.newLine();
+                bw.write("sorted node info here");
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
+        else{
+            try {
+                File existingFile = new File("hellothere.txt");
+                FileWriter fooWriter = new FileWriter(existingFile, false); // true to append
+                // false to overwrite.
+                fooWriter.write("New Contents\n");
+                fooWriter.close();
+            }
+            catch (IOException e){
+                e.printStackTrace();
+            }
+        }
+
+        //rad1 - write the imageViews image file-name on row 1
+
+        //rad2 - write every city-node as following: "Name;X-value;Y-value;" on row 2
+
+        //rad3+ - write every edge
+
     }
 
     private void saveImage(){
@@ -260,6 +300,7 @@ public class PathFinder extends Application {
     private void clearCanvas(){
         bottom.getChildren().remove(canvas);
     }
+    private void clearListGraph() { activeListGraphMap = new ListGraph(); }
 
     private void drawListGraph(){
         //TODO: lines and nodes overlap. FIX IT!

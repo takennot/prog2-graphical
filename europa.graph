@@ -7,5 +7,13 @@ Paris;Amsterdam;Train;4
 Paris;Madrid;Train;10
 Berlin;Oslo;Airplane;2
 Berlin;Warszawa;Train;6
+Berlin;Paris;Train;10
+London;Paris;Train;2
 London;Dublin;Boat;15
+Warszawa;Berlin;Train;6
+Madrid;Paris;Train;10
 Madrid;Lisabon;Train;3
+Dublin;London;Boat;15
+Lisabon;Madrid;Train;3
+Amsterdam;Paris;Train;4
+Oslo;Berlin;Airplane;2
