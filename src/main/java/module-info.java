@@ -11,8 +11,8 @@ module com.example.prog2graphical {
     requires eu.hansolo.tilesfx;
     requires org.junit.jupiter.api;
     requires org.junit.jupiter.params;
-
-    opens com.example.prog2graphical to javafx.fxml;
+    requires transitive java.desktop;
+    requires javafx.swing;
     exports com.example.prog2graphical;
     exports primary;
 }

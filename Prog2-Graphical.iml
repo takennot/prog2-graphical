@@ -37,5 +37,6 @@
     <orderEntry type="library" scope="TEST" name="Maven: org.junit.platform:junit-platform-engine:1.8.1" level="project" />
     <orderEntry type="library" name="junit.jupiter.api" level="project" />
     <orderEntry type="library" name="junit.jupiter.params" level="project" />
+    <orderEntry type="library" name="javafx.swing" level="project" />
   </component>
 </module>

@@ -1,15 +1,17 @@
 package primary;
 
 import javafx.application.Application;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
-import javafx.scene.Node;
+//import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.image.WritableImage;
 import javafx.scene.layout.*;
 import javafx.scene.shape.Circle;
 import javafx.scene.canvas.Canvas;
@@ -18,11 +20,14 @@ import javafx.scene.paint.Color;
 
 import javafx.stage.Stage;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.lang.reflect.Array;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.*;
 
 public class PathFinder extends Application {
@@ -33,6 +38,8 @@ public class PathFinder extends Application {
     private Canvas canvas;
     private Stage mainStage;
     private ImageView imageView;
+
+    private boolean unsavedChangesExist = true; //ändra false eller true idk
 
     public static void main(String[] args) {
         Application.launch(args);
@@ -81,19 +88,19 @@ public class PathFinder extends Application {
 
         MenuItem exitItem = new MenuItem("Exit");
         fileMenu.getItems().add(exitItem);
-        exitItem.setOnAction(e -> System.exit(0));
+        exitItem.setOnAction(e -> exit());
 
         // sticks the file's combobox to TOP border of root
         root.setTop(menuBar);
-
-        // button event handler
-        EventHandler<ActionEvent> buttonsEvent = new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent){
-                Alert msgBox = new Alert(Alert.AlertType.INFORMATION, "One of the buttons is pressed");
-                msgBox.showAndWait();
-            }
-        };
+//
+//        // button event handler
+//        EventHandler<ActionEvent> buttonsEvent = new EventHandler<ActionEvent>() {
+//            @Override
+//            public void handle(ActionEvent actionEvent){
+//                Alert msgBox = new Alert(Alert.AlertType.INFORMATION, "One of the buttons is pressed");
+//                msgBox.showAndWait();
+//            }
+//        };
 
         //FlowPane for buttons
         Pane buttonsFlowPane = new FlowPane();
@@ -101,27 +108,27 @@ public class PathFinder extends Application {
         //button Find Path
         Button findPathButton = new Button("Find Path");
         buttonsFlowPane.getChildren().add(findPathButton);
-        findPathButton.setOnAction(buttonsEvent);
+        findPathButton.setOnAction(new FindPathEventHandler());
 
         //button Show Connection
         Button showConnectionButton = new Button("Show Connection");
         buttonsFlowPane.getChildren().add(showConnectionButton);
-        showConnectionButton.setOnAction(buttonsEvent);
+        showConnectionButton.setOnAction(new ShowConnectionEventHandler());
 
         //button New Place
         Button newPlaceButton = new Button("New Place");
         buttonsFlowPane.getChildren().add(newPlaceButton);
-        newPlaceButton.setOnAction(buttonsEvent);
+        newPlaceButton.setOnAction(new NewPlaceEventHandler());
 
         //button New Connection
         Button newConnection = new Button("New Connection");
         buttonsFlowPane.getChildren().add(newConnection);
-        newConnection.setOnAction(buttonsEvent);
+        newConnection.setOnAction(new NewConnectionEventHandler());
 
         //button Change Connection
         Button changeConnection = new Button("Change Connection");
         buttonsFlowPane.getChildren().add(changeConnection);
-        changeConnection.setOnAction(buttonsEvent);
+        changeConnection.setOnAction(new ChangeConnectionEventHandler());
 
         root.setCenter(buttonsFlowPane);
 
@@ -137,8 +144,9 @@ public class PathFinder extends Application {
 
         setBackgroundImage("file:europa.gif");
 
+        //if changes has been made (check boolean unsavedChangesExist)
         boolean okayToClearListMap = true;
-        okayToClearListMap = openAFileAlert("Create a new map without saving this one first?");
+        okayToClearListMap = dontSaveAlert("Create a new map without saving this one first?");
 
         //clear map
         if (okayToClearListMap) {
@@ -150,7 +158,7 @@ public class PathFinder extends Application {
         }
     }
 
-    private boolean openAFileAlert(String header){
+    private boolean dontSaveAlert(String header){
         if(bottom.getChildren().contains(canvas)) {
             //ask to save changes
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
@@ -179,7 +187,7 @@ public class PathFinder extends Application {
 
     private void open(BorderPane root){
         //if changes has been made (skapa variabel)
-        boolean okayToOpen = openAFileAlert("Open a file without saving this one first?");
+        boolean okayToOpen = dontSaveAlert("Open a file without saving this one first?");
 
         if(okayToOpen) {
 
@@ -189,7 +197,7 @@ public class PathFinder extends Application {
             clearListGraph();
 
             //finns "europa.graph"?
-            try (BufferedReader reader = new BufferedReader(new FileReader(new File("europa.graph")))) {
+            try (BufferedReader reader = new BufferedReader(new FileReader(new File("europaOriginal.graph")))) {
                 //ja = open file
                 String line;
                 int lineNumber = 0;
@@ -261,68 +269,59 @@ public class PathFinder extends Application {
     }
 
     private void save(){
-        Path file = Paths.get("europa.graph");
-        if(!Files.exists(file)) {
-            try (BufferedWriter bw = new BufferedWriter(new FileWriter("europa.graph", true))) {
-                //rad 1
-                bw.write(imageView.getImage().getUrl());
-                bw.newLine();
+        Path filePath = Paths.get("europa.graph");
 
-                //rad 2
-                String secondLine = "";
-                Set<City> nodes = activeListGraphMap.getNodes();
-                for (City c : nodes
-                     ) {
+        try {
+            new FileWriter("europa.graph", true);
+            Files.newBufferedWriter(filePath, StandardOpenOption.TRUNCATE_EXISTING);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter("europa.graph", true))) {
+            //rad 1
+            bw.write(imageView.getImage().getUrl());
+            bw.newLine();
+
+            //rad 2
+            StringBuilder secondLine = new StringBuilder();
+            Set<City> nodes = activeListGraphMap.getNodes();
+            for (City c : nodes) {
+                secondLine.append(c.getName()).append(";").append(c.getX()).append(";").append(c.getY()).append(";");
+            }
+            bw.write(secondLine.toString());
+            bw.newLine();
+            //rad 3+
+            for (City c : nodes) {
+                Collection<Edge<City>> edges = activeListGraphMap.getEdgesFrom(c);
+                for (Edge<City> e : edges) {
+                    bw.write(c.getName() + ";" + e.getDestination() + ";" + e.getName() + ";" + e.getWeight() + ";");
+                    bw.newLine();
                 }
-
-                bw.write("long line with nodes here");
-                bw.newLine();
-
-                //rad 3+
-                bw.write("sorted node info here");
-            } catch (IOException e) {
-                e.printStackTrace();
             }
-        }
-        else{
-            try {
-                System.out.println("before creating file");
-                BufferedWriter bw = new BufferedWriter(new FileWriter("europa.graph", true));
-                System.out.println("after creating file");
-                //rad 1
-                System.out.println("before flush file");
-                bw.flush();
-                System.out.println("after flush file");
-                bw.write(imageView.getImage().getUrl());
-                System.out.println("after writing file url");
-                bw.newLine();
-                //rad 2
-                bw.write("long line with nodes here OVERWRITTEN");
-                bw.newLine();
-                //rad 3+
-                bw.write("sorted node info here OVERWRITTEN");
-            }
-            catch (IOException e){
-                e.printStackTrace();
-            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
-        //rad1 - write the imageViews image file-name on row 1
-
-        //rad2 - write every city-node as following: "Name;X-value;Y-value;" on row 2
-
-        //rad3+ - write every edge
-
+        unsavedChangesExist = false;
     }
 
     private void saveImage(){
         //F15
+        try{
+            WritableImage image = bottom.snapshot(null, null);
+            BufferedImage bufferedImage = SwingFXUtils.fromFXImage(image, null); //(null, null);
+            ImageIO.write(bufferedImage, "png", new File("capture.png"));
+        } catch (IOException e){
+            Alert alert = new Alert(Alert.AlertType.ERROR, "IO-fel " + e.getMessage());
+            alert.showAndWait();
+        }
     }
 
     private void clearCanvas(){
         bottom.getChildren().remove(canvas);
     }
+
     private void clearListGraph() { activeListGraphMap = new ListGraph(); }
 
     private void drawListGraph(){
@@ -359,5 +358,51 @@ public class PathFinder extends Application {
 
         //draw it on canvas
         bottom.getChildren().add(canvas);
+    }
+
+    private void exit(){
+        //if changes has been made (check boolean unsavedChangesExist)
+
+        boolean okayToExit = dontSaveAlert("Exit without saving?");
+
+        if(okayToExit) {
+            System.exit(0);
+        }
+    }
+
+    public class NewPlaceEventHandler implements EventHandler<ActionEvent>{
+
+        @Override
+        public void handle(ActionEvent actionEvent){
+
+        }
+    }
+    public class NewConnectionEventHandler implements EventHandler<ActionEvent>{
+
+        @Override
+        public void handle(ActionEvent actionEvent){
+
+        }
+    }
+    public class FindPathEventHandler implements EventHandler<ActionEvent>{
+
+        @Override
+        public void handle(ActionEvent actionEvent){
+
+        }
+    }
+    public class ShowConnectionEventHandler implements EventHandler<ActionEvent>{
+
+        @Override
+        public void handle(ActionEvent actionEvent){
+
+        }
+    }
+    public class ChangeConnectionEventHandler implements EventHandler<ActionEvent>{
+
+        @Override
+        public void handle(ActionEvent actionEvent){
+
+        }
     }
 }
