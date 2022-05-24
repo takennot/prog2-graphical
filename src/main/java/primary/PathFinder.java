@@ -178,6 +178,7 @@ public class PathFinder extends Application {
     }
 
     private void open(BorderPane root){
+        //if changes has been made (skapa variabel)
         boolean okayToOpen = openAFileAlert("Open a file without saving this one first?");
 
         if(okayToOpen) {
@@ -260,13 +261,25 @@ public class PathFinder extends Application {
     }
 
     private void save(){
-        Path file = Paths.get("hellothere.txt");
+        Path file = Paths.get("europa.graph");
         if(!Files.exists(file)) {
-            try (BufferedWriter bw = new BufferedWriter(new FileWriter("hellothere.txt", true))) {
-                bw.write("file URL here");
+            try (BufferedWriter bw = new BufferedWriter(new FileWriter("europa.graph", true))) {
+                //rad 1
+                bw.write(imageView.getImage().getUrl());
                 bw.newLine();
+
+                //rad 2
+                String secondLine = "";
+                Set<City> nodes = activeListGraphMap.getNodes();
+                for (City c : nodes
+                     ) {
+
+                }
+
                 bw.write("long line with nodes here");
                 bw.newLine();
+
+                //rad 3+
                 bw.write("sorted node info here");
             } catch (IOException e) {
                 e.printStackTrace();
@@ -274,11 +287,21 @@ public class PathFinder extends Application {
         }
         else{
             try {
-                File existingFile = new File("hellothere.txt");
-                FileWriter fooWriter = new FileWriter(existingFile, false); // true to append
-                // false to overwrite.
-                fooWriter.write("New Contents\n");
-                fooWriter.close();
+                System.out.println("before creating file");
+                BufferedWriter bw = new BufferedWriter(new FileWriter("europa.graph", true));
+                System.out.println("after creating file");
+                //rad 1
+                System.out.println("before flush file");
+                bw.flush();
+                System.out.println("after flush file");
+                bw.write(imageView.getImage().getUrl());
+                System.out.println("after writing file url");
+                bw.newLine();
+                //rad 2
+                bw.write("long line with nodes here OVERWRITTEN");
+                bw.newLine();
+                //rad 3+
+                bw.write("sorted node info here OVERWRITTEN");
             }
             catch (IOException e){
                 e.printStackTrace();
