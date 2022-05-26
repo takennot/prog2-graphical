@@ -2,7 +2,7 @@ package primary;
 
 import java.util.*;
 
-public class City{
+public class City {
     private final String name;
 
     private final float x;
