@@ -4,7 +4,10 @@ import javafx.application.Application;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
-//import javafx.scene.Node;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Node;
+import javafx.scene.Cursor;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -38,6 +41,8 @@ public class PathFinder extends Application {
     private Canvas canvas;
     private Stage mainStage;
     private ImageView imageView;
+    private Scene scene;
+    private Pane buttonsFlowPane;
 
     private boolean unsavedChangesExist = true; //ändra false eller true idk
 
@@ -103,36 +108,37 @@ public class PathFinder extends Application {
 //        };
 
         //FlowPane for buttons
-        Pane buttonsFlowPane = new FlowPane();
+        buttonsFlowPane = new FlowPane();
 
         //button Find Path
         Button findPathButton = new Button("Find Path");
         buttonsFlowPane.getChildren().add(findPathButton);
-        findPathButton.setOnAction(new FindPathEventHandler());
+        findPathButton.setOnAction(new FindPathEventHandler(findPathButton));
 
         //button Show Connection
         Button showConnectionButton = new Button("Show Connection");
         buttonsFlowPane.getChildren().add(showConnectionButton);
-        showConnectionButton.setOnAction(new ShowConnectionEventHandler());
+        showConnectionButton.setOnAction(new ShowConnectionEventHandler(showConnectionButton));
 
         //button New Place
         Button newPlaceButton = new Button("New Place");
         buttonsFlowPane.getChildren().add(newPlaceButton);
-        newPlaceButton.setOnAction(new NewPlaceEventHandler());
+        newPlaceButton.setOnAction(new NewPlaceEventHandler(newPlaceButton));
 
         //button New Connection
         Button newConnection = new Button("New Connection");
         buttonsFlowPane.getChildren().add(newConnection);
-        newConnection.setOnAction(new NewConnectionEventHandler());
+        newConnection.setOnAction(new NewConnectionEventHandler(newConnection));
 
         //button Change Connection
         Button changeConnection = new Button("Change Connection");
         buttonsFlowPane.getChildren().add(changeConnection);
-        changeConnection.setOnAction(new ChangeConnectionEventHandler());
+        changeConnection.setOnAction(new ChangeConnectionEventHandler(changeConnection));
 
         root.setCenter(buttonsFlowPane);
 
-        primaryStage.setScene(new Scene(root, 618, 50));
+        scene = new Scene(root, 618, 50);
+        primaryStage.setScene(scene);
         primaryStage.setResizable(false);
         primaryStage.show();
 
@@ -146,7 +152,9 @@ public class PathFinder extends Application {
 
         //if changes has been made (check boolean unsavedChangesExist)
         boolean okayToClearListMap = true;
-        okayToClearListMap = dontSaveAlert("Create a new map without saving this one first?");
+        if(unsavedChangesExist) {
+            okayToClearListMap = dontSaveAlert("Create a new map without saving this one first?");
+        }
 
         //clear map
         if (okayToClearListMap) {
@@ -187,7 +195,10 @@ public class PathFinder extends Application {
 
     private void open(BorderPane root){
         //if changes has been made (skapa variabel)
-        boolean okayToOpen = dontSaveAlert("Open a file without saving this one first?");
+        boolean okayToOpen = true;
+        if(unsavedChangesExist) {
+            okayToOpen = dontSaveAlert("Open a file without saving this one first?");
+        }
 
         if(okayToOpen) {
 
@@ -197,7 +208,7 @@ public class PathFinder extends Application {
             clearListGraph();
 
             //finns "europa.graph"?
-            try (BufferedReader reader = new BufferedReader(new FileReader(new File("europaOriginal.graph")))) {
+            try (BufferedReader reader = new BufferedReader(new FileReader(new File("europa.graph")))) {
                 //ja = open file
                 String line;
                 int lineNumber = 0;
@@ -372,12 +383,61 @@ public class PathFinder extends Application {
 
     public class NewPlaceEventHandler implements EventHandler<ActionEvent>{
 
+        private final Button button;
+
+        public NewPlaceEventHandler(Button button){
+            this.button = button;
+        }
+
         @Override
         public void handle(ActionEvent actionEvent){
+            //ändra muspekaren till "+"
+            scene.setCursor(Cursor.CROSSHAIR);
+            //disable newPlace button
+            button.setDisable(true);
 
+
+            //känn av var dom trycker på kartan
+            bottom.setOnMouseClicked(event -> {
+                System.out.println("Mouse clicked");
+                if(button.isDisable()) {
+
+                    double posX = event.getX();
+                    double posY = event.getY();
+
+                    System.out.println("X: " + event.getX());
+                    System.out.println("Y: " + event.getY());
+
+                    //då öppna ett alert
+                    NewPlaceDialog newPlaceDialog = new NewPlaceDialog();
+                    Optional<ButtonType> result = newPlaceDialog.showAndWait();
+
+                    if (result.isPresent() && result.get() != ButtonType.OK) {
+                        button.setDisable(false);
+                        return;
+                    }
+
+                    String nameOfCity = newPlaceDialog.getName();
+
+                    //add city to listGraph
+                    activeListGraphMap.add(new City(nameOfCity, (float) posX, (float) posY));
+                    drawListGraph();
+                    unsavedChangesExist = true;
+
+                    scene.setCursor(Cursor.DEFAULT);
+                    button.setDisable(false);
+                }
+            });
         }
     }
+
     public class NewConnectionEventHandler implements EventHandler<ActionEvent>{
+
+        private final Button button;
+
+        public NewConnectionEventHandler(Button button){
+            this.button = button;
+        }
 
         @Override
         public void handle(ActionEvent actionEvent){
@@ -386,12 +446,24 @@ public class PathFinder extends Application {
     }
     public class FindPathEventHandler implements EventHandler<ActionEvent>{
 
+        private final Button button;
+
+        public FindPathEventHandler(Button button){
+            this.button = button;
+        }
+
         @Override
         public void handle(ActionEvent actionEvent){
 
         }
     }
     public class ShowConnectionEventHandler implements EventHandler<ActionEvent>{
+
+        private final Button button;
+
+        public ShowConnectionEventHandler(Button button){
+            this.button = button;
+        }
 
         @Override
         public void handle(ActionEvent actionEvent){
@@ -400,9 +472,38 @@ public class PathFinder extends Application {
     }
     public class ChangeConnectionEventHandler implements EventHandler<ActionEvent>{
 
+        private final Button button;
+
+        public ChangeConnectionEventHandler(Button button){
+            this.button = button;
+        }
+
         @Override
         public void handle(ActionEvent actionEvent){
 
+        }
+    }
+
+    class NewPlaceDialog extends Alert{
+        private final TextField nameOfPlaceField = new TextField();
+
+        public NewPlaceDialog(){
+            super(AlertType.CONFIRMATION);
+            GridPane grid = new GridPane();
+
+            grid.setAlignment(Pos.CENTER);
+            grid.setPadding(new Insets(10));
+            grid.setHgap(5);
+            grid.setVgap(10);
+
+            grid.addRow(0, new Label("Name of place:"), nameOfPlaceField);
+            setHeaderText(null);
+            setTitle("Name");
+            getDialogPane().setContent(grid);
+        }
+
+        public String getName(){
+            return nameOfPlaceField.getText();
         }
     }
 }
