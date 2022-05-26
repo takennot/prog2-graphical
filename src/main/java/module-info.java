@@ -15,4 +15,5 @@ module com.example.prog2graphical {
     requires javafx.swing;
     exports com.example.prog2graphical;
     exports primary;
+    exports primary.Exempelkoder;
 }

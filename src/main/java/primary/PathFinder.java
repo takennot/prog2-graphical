@@ -15,13 +15,17 @@ import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.shape.Circle;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 
+import javafx.scene.shape.Shape;
 import javafx.stage.Stage;
+import primary.Exempelkoder.Bricka;
+import primary.Exempelkoder.Memory;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -43,6 +47,8 @@ public class PathFinder extends Application {
     private ImageView imageView;
     private Scene scene;
     private Pane buttonsFlowPane;
+
+    private MapTile mapTile1 = null, mapTile2 = null;
 
     private boolean unsavedChangesExist = true; //ändra false eller true idk
 
@@ -141,10 +147,8 @@ public class PathFinder extends Application {
         primaryStage.setScene(scene);
         primaryStage.setResizable(false);
         primaryStage.show();
-
         //primaryStage.setHeight(50 + buttonsFlowPane.getHeight() + menuBar.getHeight());
     }
-
     //"New Map", "Open", "Save", "Save Image", "Exit"
     private void newMap(BorderPane root){
 
@@ -274,8 +278,9 @@ public class PathFinder extends Application {
             //skriver ut ListGraph för att se att allt stämmer
             System.out.println(activeListGraphMap.toString());
 
-            //draw it out
-            drawListGraph();
+                //draw it out
+            //drawListGraph();
+            drawListGraphTiles();
         }
     }
 
@@ -351,6 +356,7 @@ public class PathFinder extends Application {
         //draw nodes and edges on a canvas
         Set<City> nodes = activeListGraphMap.getNodes();
         gc.setFill(Color.BLUE);
+
         for (City c : nodes) {
             //draw edges from city
             gc.setStroke(Color.BLACK);
@@ -363,12 +369,76 @@ public class PathFinder extends Application {
             }
 
             //draw node
+
             gc.fillOval(c.getX() - radius, c.getY() - radius, diameter, diameter);
+
         }
-        //write labels with city names under the nodes
+        //write labels with city names under the nodes?
 
         //draw it on canvas
         bottom.getChildren().add(canvas);
+    }
+
+    private void drawListGraphTiles(){
+        int radius = 10;
+        int diameter = radius * 2;
+
+        ClickHandler clickHandler = new ClickHandler();
+
+        Set<City> nodes = activeListGraphMap.getNodes();
+
+        //edge stuff atm
+        canvas = new Canvas(618,729);
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+        gc.moveTo(0,0);
+        gc.stroke();
+
+        for (City c : nodes) {
+            //draw edges from city
+            gc.setStroke(Color.BLACK);
+            gc.setLineWidth(3);
+
+            Collection<Edge> edgesFromCity =  activeListGraphMap.getEdgesFrom(c); //funkar detta?
+            for (Edge e : edgesFromCity) {
+                City cityTo = (City) e.getDestination();
+                gc.strokeLine(c.getX(), c.getY(), cityTo.getX(), cityTo.getY());
+            }
+        }
+
+        //draw it on canvas
+        bottom.getChildren().add(canvas);
+
+        //city node stuff
+        List<MapTile> mapTiles = new ArrayList<>();
+        int i = 0;
+        for (City c: nodes) {
+            mapTiles.add(new MapTile(c, radius));
+            i++;
+        }
+        //add tiles to bottom
+        for (MapTile m : mapTiles) {
+            bottom.getChildren().add(m);
+            m.setOnMouseClicked(clickHandler);
+        }
+    }
+
+    class ClickHandler implements EventHandler<MouseEvent> {
+        @Override
+        public void handle(MouseEvent mouseEvent) {
+            System.out.println("ClickHandler active");
+
+            MapTile m = (MapTile) mouseEvent.getSource();
+            System.out.println("City: " + m.city.getName());
+
+            if(mapTile1 == null){
+                mapTile1 = m;
+                m.paintUncovered();
+            }
+            else if (mapTile2 == null && m != mapTile1){
+                mapTile2 = m;
+                m.paintUncovered();
+            }
+        }
     }
 
     private void exit(){
@@ -396,11 +466,10 @@ public class PathFinder extends Application {
             //disable newPlace button
             button.setDisable(true);
 
-
             //känn av var dom trycker på kartan
             bottom.setOnMouseClicked(event -> {
                 System.out.println("Mouse clicked");
-                if(button.isDisable()) {
+                if(button.isDisabled()) {
 
                     double posX = event.getX();
                     double posY = event.getY();
@@ -414,6 +483,7 @@ public class PathFinder extends Application {
 
                     if (result.isPresent() && result.get() != ButtonType.OK) {
                         button.setDisable(false);
+                        scene.setCursor(Cursor.DEFAULT);
                         return;
                     }
 
@@ -421,7 +491,8 @@ public class PathFinder extends Application {
 
                     //add city to listGraph
                     activeListGraphMap.add(new City(nameOfCity, (float) posX, (float) posY));
-                    drawListGraph();
+                    //drawListGraph();
+                    drawListGraphTiles();
                     unsavedChangesExist = true;
 
                     scene.setCursor(Cursor.DEFAULT);
