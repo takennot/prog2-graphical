@@ -52,6 +52,10 @@ public class PathFinder extends Application {
 
     private boolean unsavedChangesExist = true; //ändra false eller true idk
 
+    //test stuff
+    private final Label testLabel1 = new Label("1: null");
+    private final Label testLabel2 = new Label("2: null");
+
     public static void main(String[] args) {
         Application.launch(args);
     }
@@ -70,6 +74,12 @@ public class PathFinder extends Application {
         imageView = new ImageView();
         bottom.getChildren().add(imageView);
         root.setBottom(bottom);
+
+        //testPane
+        VBox testPane = new VBox();
+        testPane.getChildren().add(testLabel1);
+        testPane.getChildren().add(testLabel2);
+        root.setRight(testPane);
 
         // MenuBar declaration
         MenuBar menuBar = new MenuBar();
@@ -406,7 +416,7 @@ public class PathFinder extends Application {
         }
 
         //draw it on canvas
-        bottom.getChildren().add(canvas);
+        bottom.getChildren().add(canvas); //TODO: !!!!
 
         //city node stuff
         List<MapTile> mapTiles = new ArrayList<>();
@@ -427,17 +437,39 @@ public class PathFinder extends Application {
         public void handle(MouseEvent mouseEvent) {
             System.out.println("ClickHandler active");
 
-            MapTile m = (MapTile) mouseEvent.getSource();
-            System.out.println("City: " + m.city.getName());
+            if(mouseEvent.getSource() instanceof MapTile) {
+                MapTile m = (MapTile) mouseEvent.getSource();
+                System.out.println("City: " + m.city.getName());
 
-            if(mapTile1 == null){
-                mapTile1 = m;
-                m.paintUncovered();
+                if (mapTile1 == null && m != mapTile2) {
+                    mapTile1 = m;
+                    m.paintUncovered();
+                }
+                else if (mapTile2 == null && m != mapTile1) {
+                    mapTile2 = m;
+                    m.paintUncovered();
+                }
+                else if (m == mapTile1) {
+                    //deselect
+                    mapTile1 = null;
+                    m.paintCovered();
+                }
+                else if (m == mapTile2) {
+                    //deselect
+                    mapTile2 = null;
+                    m.paintCovered();
+                }
             }
-            else if (mapTile2 == null && m != mapTile1){
-                mapTile2 = m;
-                m.paintUncovered();
-            }
+
+            //test TODO: TA BOR SEN!
+            if(mapTile1 == null)
+                testLabel1.setText("1: null");
+            else
+                testLabel1.setText(mapTile1.city.getName());
+            if(mapTile2 == null)
+                testLabel2.setText("2: null");
+            else
+                testLabel2.setText(mapTile2.city.getName());
         }
     }
 
@@ -511,7 +543,32 @@ public class PathFinder extends Application {
 
         @Override
         public void handle(ActionEvent actionEvent){
+            if(mapTile1 != null && mapTile2 != null){
 
+                //Nodes
+                City from = mapTile1.city;
+                City to = mapTile2.city;
+
+                //connection alert dialog
+                NewConnectionDialog newConnectionDialog = new NewConnectionDialog(from, to);
+                Optional<ButtonType> result = newConnectionDialog.showAndWait();
+
+                if (result.isPresent() && result.get() == ButtonType.OK) {
+                    activeListGraphMap.connect(from, to, newConnectionDialog.getName(), (int) newConnectionDialog.getWeight());
+
+                    drawListGraphTiles();
+                    unsavedChangesExist = true;
+                }
+            }
+            else{
+                //error alert
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Error!");
+                alert.setHeaderText(null);
+                alert.setContentText("Two places must be selected!");
+
+                alert.showAndWait();
+            }
         }
     }
     public class FindPathEventHandler implements EventHandler<ActionEvent>{
@@ -574,6 +631,35 @@ public class PathFinder extends Application {
 
         public String getName(){
             return nameOfPlaceField.getText();
+        }
+    }
+
+    class NewConnectionDialog extends Alert{
+        private final TextField nameOfEdgeField = new TextField();
+        private final TextField timeField = new TextField();
+
+        public NewConnectionDialog(City from, City to){
+            super(AlertType.CONFIRMATION);
+            GridPane grid = new GridPane();
+
+            grid.setAlignment(Pos.CENTER);
+            grid.setPadding(new Insets(10));
+            grid.setHgap(5);
+            grid.setVgap(10);
+
+            grid.addRow(0, new Label("Name:"), nameOfEdgeField);
+            grid.addRow(1, new Label("Time:"), timeField);
+
+            setHeaderText("Connection from " + from.getName() + " to " + to.getName());
+            setTitle("Connection");
+            getDialogPane().setContent(grid);
+        }
+
+        public String getName(){
+            return nameOfEdgeField.getText();
+        }
+        public double getWeight(){
+            return Double.parseDouble(timeField.getText());
         }
     }
 }
