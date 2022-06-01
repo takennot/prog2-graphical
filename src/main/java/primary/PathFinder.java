@@ -501,7 +501,6 @@ public class PathFinder extends Application {
             });
         }
     }
-
     public class NewConnectionEventHandler implements EventHandler<ActionEvent>{
 
         private final Button button;
