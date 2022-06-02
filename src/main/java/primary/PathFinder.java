@@ -113,15 +113,6 @@ public class PathFinder extends Application {
 
         // sticks the file's combobox to TOP border of root
         root.setTop(menuBar);
-//
-//        // button event handler
-//        EventHandler<ActionEvent> buttonsEvent = new EventHandler<ActionEvent>() {
-//            @Override
-//            public void handle(ActionEvent actionEvent){
-//                Alert msgBox = new Alert(Alert.AlertType.INFORMATION, "One of the buttons is pressed");
-//                msgBox.showAndWait();
-//            }
-//        };
 
         //FlowPane for buttons
         buttonsFlowPane = new FlowPane();
@@ -159,7 +150,7 @@ public class PathFinder extends Application {
         primaryStage.show();
         //primaryStage.setHeight(50 + buttonsFlowPane.getHeight() + menuBar.getHeight());
     }
-    //"New Map", "Open", "Save", "Save Image", "Exit"
+
     private void newMap(BorderPane root){
 
         setBackgroundImage("file:europa.gif");
@@ -172,11 +163,8 @@ public class PathFinder extends Application {
 
         //clear map
         if (okayToClearListMap) {
-            //clear canvas
-            clearCanvas();
-
-            //clear ListGraph
-            clearListGraph();
+            //clear bottom
+            clearBottom();
         }
     }
 
@@ -217,9 +205,9 @@ public class PathFinder extends Application {
         if(okayToOpen) {
 
             //clear canvas
-            clearCanvas();
-            //clear ListGraph
-            clearListGraph();
+            System.out.println("Clearing canvas?");
+            //clear bottom
+            clearBottom();
 
             //finns "europa.graph"?
             try (BufferedReader reader = new BufferedReader(new FileReader(new File("europa.graph")))) {
@@ -273,7 +261,7 @@ public class PathFinder extends Application {
                                     secondCityIndex = j;
                                 }
                             }
-                            //TODO: check if the cities are already connected - then dont do shit
+
                             if(!activeListGraphMap.pathExists(nodesClone[firstCityIndex], nodesClone[secondCityIndex]))
                                 activeListGraphMap.connect(nodesClone[firstCityIndex], nodesClone[secondCityIndex], edgeValues[i + 2], Integer.parseInt(edgeValues[i + 3]));
                         }
@@ -290,6 +278,7 @@ public class PathFinder extends Application {
 
                 //draw it out
             //drawListGraph();
+            drawListGraphEdges();
             drawListGraphTiles();
         }
     }
@@ -344,11 +333,27 @@ public class PathFinder extends Application {
         }
     }
 
-    private void clearCanvas(){
+    private void clearBottom(){
+        System.out.println("Clearing bottom");
+        clearEdges();
+        clearListGraph();
+    }
+
+    private void clearEdges(){
+        System.out.println("Clearing edges canvas?");
         bottom.getChildren().remove(canvas);
     }
 
-    private void clearListGraph() { activeListGraphMap = new ListGraph(); }
+    private void clearTiles(){
+        System.out.println("Clearing tiles?");
+        //remove
+        bottom.getChildren().removeIf(n -> n instanceof MapTile);
+    }
+
+    private void clearListGraph() {
+        System.out.println("Clearing listGraph?");
+        activeListGraphMap = new ListGraph();
+    }
 
     private void drawListGraph(){
         //TODO: lines and nodes overlap. FIX IT!
@@ -389,11 +394,7 @@ public class PathFinder extends Application {
         bottom.getChildren().add(canvas);
     }
 
-    private void drawListGraphTiles(){
-        int radius = 10;
-        int diameter = radius * 2;
-
-        ClickHandler clickHandler = new ClickHandler();
+    private void drawListGraphEdges(){
 
         Set<City> nodes = activeListGraphMap.getNodes();
 
@@ -417,6 +418,14 @@ public class PathFinder extends Application {
 
         //draw it on canvas
         bottom.getChildren().add(canvas); //TODO: !!!!
+    }
+
+    private void drawListGraphTiles(){
+        int radius = 10;
+        int diameter = radius * 2;
+
+        ClickHandler clickHandler = new ClickHandler();
+        Set<City> nodes = activeListGraphMap.getNodes();
 
         //city node stuff
         List<MapTile> mapTiles = new ArrayList<>();
@@ -425,8 +434,14 @@ public class PathFinder extends Application {
             mapTiles.add(new MapTile(c, radius));
             i++;
         }
+
         //add tiles to bottom
         for (MapTile m : mapTiles) {
+            //clear all tiles
+            for (Node mapTile : bottom.getChildren()) {
+                    bottom.getChildren().remove(m);
+            }
+            //add them
             bottom.getChildren().add(m);
             m.setOnMouseClicked(clickHandler);
         }
@@ -483,6 +498,7 @@ public class PathFinder extends Application {
         }
     }
 
+    //EventHandlers
     public class NewPlaceEventHandler implements EventHandler<ActionEvent>{
 
         private final Button button;
@@ -524,6 +540,7 @@ public class PathFinder extends Application {
                     //add city to listGraph
                     activeListGraphMap.add(new City(nameOfCity, (float) posX, (float) posY));
                     //drawListGraph();
+                    drawListGraphEdges();
                     drawListGraphTiles();
                     unsavedChangesExist = true;
 
@@ -554,10 +571,37 @@ public class PathFinder extends Application {
                 Optional<ButtonType> result = newConnectionDialog.showAndWait();
 
                 if (result.isPresent() && result.get() == ButtonType.OK) {
-                    activeListGraphMap.connect(from, to, newConnectionDialog.getName(), (int) newConnectionDialog.getWeight());
+                    if(newConnectionDialog.getName().isEmpty()){
+                        //error alert
+                        Alert alert = new Alert(Alert.AlertType.ERROR);
+                        alert.setTitle("Error!");
+                        alert.setHeaderText(null);
+                        alert.setContentText("Name cannot be empty!");
 
-                    drawListGraphTiles();
-                    unsavedChangesExist = true;
+                        alert.showAndWait();
+                    }
+                    else if(newConnectionDialog.getWeight() == 0){
+                        //wrong
+                    }
+                    else{
+                        activeListGraphMap.connect(from, to, newConnectionDialog.getName(), (int) newConnectionDialog.getWeight());
+
+                        //deselect 1
+                        mapTile1 = null;
+                        //deselect 2
+                        mapTile2 = null;
+
+                        //clear stuff
+                        clearEdges();
+                        clearTiles();
+
+                        //ListGraph backup = new ListGraph();
+
+                        //draw stuff
+                        drawListGraphEdges();
+                        drawListGraphTiles();
+                        unsavedChangesExist = true;
+                    }
                 }
             }
             else{
@@ -611,6 +655,7 @@ public class PathFinder extends Application {
         }
     }
 
+    //Button Dialogs
     class NewPlaceDialog extends Alert{
         private final TextField nameOfPlaceField = new TextField();
 
@@ -633,7 +678,6 @@ public class PathFinder extends Application {
             return nameOfPlaceField.getText();
         }
     }
-
     class NewConnectionDialog extends Alert{
         private final TextField nameOfEdgeField = new TextField();
         private final TextField timeField = new TextField();
@@ -659,7 +703,19 @@ public class PathFinder extends Application {
             return nameOfEdgeField.getText();
         }
         public double getWeight(){
-            return Double.parseDouble(timeField.getText());
+            try {
+                return Double.parseDouble(timeField.getText());
+            }
+            catch (Exception e) {
+                //error alert
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Error!");
+                alert.setHeaderText(null);
+                alert.setContentText("wrong input type!");
+
+                alert.showAndWait();
+            }
+            return 0;
         }
     }
 }
