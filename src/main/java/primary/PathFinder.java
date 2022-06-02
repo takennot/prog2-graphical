@@ -432,6 +432,9 @@ public class PathFinder extends Application {
 
             m.setOnMouseClicked(clickHandler);
         }
+
+        mapTile1 = null;
+        mapTile2 = null;
     }
 
     private void showMustSelectTwoPlacesAlert(){
