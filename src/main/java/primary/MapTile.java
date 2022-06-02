@@ -30,8 +30,6 @@ public class MapTile extends Canvas {
     public void paintCovered(){
         GraphicsContext gc = getGraphicsContext2D();
         gc.setFill(Color.BLUE);
-        //gc.fillRect(0, 0, getWidth(), getHeight());
-        //gc.fillOval(getWidth() - (getWidth() / 2), getHeight() - (getHeight() / 2), getWidth(), getHeight());
         gc.fillOval(0, 0, getWidth(), getHeight());
     }
 

@@ -41,17 +41,13 @@ public class PathFinder extends Application {
     private Pane bottom;
     private Canvas canvas;
     private Stage mainStage;
-    private ImageView imageView;
+    private ImageView imageView = new ImageView();
     private Scene scene;
-    private Pane buttonsFlowPane;
+    private HBox buttonsPane;
 
     private MapTile mapTile1 = null, mapTile2 = null;
 
     private boolean unsavedChangesExist = true; //ändra false eller true idk
-
-    //test stuff
-    private final Label testLabel1 = new Label("1: null");
-    private final Label testLabel2 = new Label("2: null");
 
     public static void main(String[] args) {
         Application.launch(args);
@@ -69,15 +65,8 @@ public class PathFinder extends Application {
         // Image
         bottom = new Pane();
         bottom.setId("outputArea");
-        imageView = new ImageView();
         bottom.getChildren().add(imageView);
         root.setBottom(bottom);
-
-        //testPane
-        VBox testPane = new VBox();
-        testPane.getChildren().add(testLabel1);
-        testPane.getChildren().add(testLabel2);
-        root.setRight(testPane);
 
         // MenuBar declaration
         MenuBar menuBar = new MenuBar();
@@ -119,43 +108,43 @@ public class PathFinder extends Application {
         // sticks the file's combobox to TOP border of root
         root.setTop(menuBar);
 
-        //FlowPane for buttons
-        buttonsFlowPane = new FlowPane();
+        //Pane for buttons
+        buttonsPane = new HBox(10);
 
         //button Find Path
         Button findPathButton = new Button("Find Path");
         findPathButton.setId("btnFindPath");
-        buttonsFlowPane.getChildren().add(findPathButton);
+        buttonsPane.getChildren().add(findPathButton);
         findPathButton.setOnAction(new FindPathEventHandler(findPathButton));
 
         //button Show Connection
         Button showConnectionButton = new Button("Show Connection");
         showConnectionButton.setId("btnShowConnection");
-        buttonsFlowPane.getChildren().add(showConnectionButton);
+        buttonsPane.getChildren().add(showConnectionButton);
         showConnectionButton.setOnAction(new ShowConnectionEventHandler(showConnectionButton));
 
         //button New Place
         Button newPlaceButton = new Button("New Place");
         newPlaceButton.setId("btnNewPlace");
-        buttonsFlowPane.getChildren().add(newPlaceButton);
+        buttonsPane.getChildren().add(newPlaceButton);
         newPlaceButton.setOnAction(new NewPlaceEventHandler(newPlaceButton));
 
         //button New Connection
         Button newConnection = new Button("New Connection");
         newConnection.setId("btnNewConnection");
-        buttonsFlowPane.getChildren().add(newConnection);
+        buttonsPane.getChildren().add(newConnection);
         newConnection.setOnAction(new NewConnectionEventHandler(newConnection));
 
         //button Change Connection
         Button changeConnection = new Button("Change Connection");
         changeConnection.setId("btnChangeConnection");
-        buttonsFlowPane.getChildren().add(changeConnection);
+        buttonsPane.getChildren().add(changeConnection);
         changeConnection.setOnAction(new ChangeConnectionEventHandler(changeConnection));
 
-        root.setCenter(buttonsFlowPane);
+        root.setCenter(buttonsPane);
+        buttonsPane.setAlignment(Pos.CENTER);
 
-
-        scene = new Scene(root, 618, 50);
+        scene = new Scene(root, 618, 70);
         primaryStage.setScene(scene);
         primaryStage.setResizable(false);
         primaryStage.show();
@@ -197,8 +186,7 @@ public class PathFinder extends Application {
 
     private void setBackgroundImage(String fileName){
         Image imageMap = new Image("file:europa.gif");
-        imageView = new ImageView(imageMap);
-        bottom.getChildren().add(imageView);
+        imageView.setImage(imageMap);
 
         if (!hasExpandedHeightOnce){
             mainStage.setHeight(mainStage.getHeight() + imageMap.getHeight()); //729
@@ -214,9 +202,6 @@ public class PathFinder extends Application {
         }
 
         if(okayToOpen) {
-
-            //clear canvas
-            System.out.println("Clearing canvas?");
             //clear bottom
             clearBottom();
 
@@ -228,19 +213,13 @@ public class PathFinder extends Application {
 
                 while((line = reader.readLine()) != null){
                     lineNumber++;
-                    System.out.println(line);
 
                     if (lineNumber == 1) {
                         //reads file-name
                         setBackgroundImage(line);
                     } else if (lineNumber == 2) {
                         //läser in noder
-                        String nodeValues[] = line.split(";");
-
-                        //skriv ut alla värden
-                        for (String s : nodeValues) {
-                            System.out.println(s);
-                        }
+                        String[] nodeValues = line.split(";");
 
                         //sätt ihop värdena och lägg till alla noder i ListGraph:en
                         for (int i = 0; i < nodeValues.length; i += 3) {
@@ -249,7 +228,7 @@ public class PathFinder extends Application {
                         }
                     } else if (lineNumber >= 3) {
                         //läser in edges
-                        String edgeValues[] = line.split(";");
+                        String[] edgeValues = line.split(";");
 
                         Set<City> nodesSet = activeListGraphMap.getNodes();
 
@@ -261,31 +240,28 @@ public class PathFinder extends Application {
                             nodesClone[index++] = (City) o;
                         }
 
+                        //TODO: fix
                         for (int i = 0; i < edgeValues.length; i += 4) {
-                            int firstCityIndex = -1; //FIXA SÅ DET INTE ÄR -1!!!!!!!!
-                            int secondCityIndex = -1; //FIXA SÅ DET INTE ÄR -1!!!!!!!!
+                            City firstCity = null;
+                            City secondCity = null;
 
                             for (int j = 0; j < nodes.length; j++) {
                                 if (nodesClone[j].getName().equals(edgeValues[i])) {
-                                    firstCityIndex = j;
+                                    firstCity = nodesClone[j];
                                 } else if (nodesClone[j].getName().equals(edgeValues[i + 1])) {
-                                    secondCityIndex = j;
+                                    secondCity = nodesClone[j];
                                 }
                             }
 
-                            if(!activeListGraphMap.pathExists(nodesClone[firstCityIndex], nodesClone[secondCityIndex]))
-                                activeListGraphMap.connect(nodesClone[firstCityIndex], nodesClone[secondCityIndex], edgeValues[i + 2], Integer.parseInt(edgeValues[i + 3]));
+                            if(firstCity != null && secondCity != null && !activeListGraphMap.pathExists(firstCity, secondCity))
+                                activeListGraphMap.connect(firstCity, secondCity, edgeValues[i + 2], Integer.parseInt(edgeValues[i + 3]));
                         }
                     }
                 }
             } catch (IOException e) {
                 //nej = ge felmeddelande!
                 e.printStackTrace();
-                System.out.println("europa.graph not found");
             }
-
-            //skriver ut ListGraph för att se att allt stämmer
-            System.out.println(activeListGraphMap.toString());
 
                 //draw it out
             //drawListGraph();
@@ -333,7 +309,6 @@ public class PathFinder extends Application {
     }
 
     private void saveImage(){
-        //F15
         try{
             WritableImage image = bottom.snapshot(null, null);
             BufferedImage bufferedImage = SwingFXUtils.fromFXImage(image, null); //(null, null);
@@ -345,64 +320,21 @@ public class PathFinder extends Application {
     }
 
     private void clearBottom(){
-        System.out.println("Clearing bottom");
         clearEdges();
         clearListGraph();
     }
 
     private void clearEdges(){
-        System.out.println("Clearing edges canvas?");
         bottom.getChildren().remove(canvas);
     }
 
     private void clearTiles(){
-        System.out.println("Clearing tiles?");
         //remove
         bottom.getChildren().removeIf(n -> n instanceof MapTile);
     }
 
     private void clearListGraph() {
-        System.out.println("Clearing listGraph?");
         activeListGraphMap = new ListGraph();
-    }
-
-    private void drawListGraph(){
-        //TODO: lines and nodes overlap. FIX IT!
-        //TODO: ska dom ens ritas ut 2 gånger? kan vi fixa det på något sätt?
-
-        //create a canvas
-        canvas = new Canvas(618,729);
-        GraphicsContext gc = canvas.getGraphicsContext2D();
-        gc.moveTo(0,0);
-        gc.stroke();
-
-        int radius = 10;
-        int diameter = radius * 2;
-
-        //draw nodes and edges on a canvas
-        Set<City> nodes = activeListGraphMap.getNodes();
-        gc.setFill(Color.BLUE);
-
-        for (City c : nodes) {
-            //draw edges from city
-            gc.setStroke(Color.BLACK);
-            gc.setLineWidth(3);
-
-            Collection<Edge> edgesFromCity =  activeListGraphMap.getEdgesFrom(c); //funkar detta?
-            for (Edge e : edgesFromCity) {
-                City cityTo = (City) e.getDestination();
-                gc.strokeLine(c.getX(), c.getY(), cityTo.getX(), cityTo.getY());
-            }
-
-            //draw node
-
-            gc.fillOval(c.getX() - radius, c.getY() - radius, diameter, diameter);
-
-        }
-        //write labels with city names under the nodes?
-
-        //draw it on canvas
-        bottom.getChildren().add(canvas);
     }
 
     private void drawListGraphEdges(){
@@ -420,7 +352,7 @@ public class PathFinder extends Application {
             gc.setStroke(Color.BLACK);
             gc.setLineWidth(3);
 
-            Collection<Edge> edgesFromCity =  activeListGraphMap.getEdgesFrom(c); //funkar detta?
+            Collection<Edge> edgesFromCity =  activeListGraphMap.getEdgesFrom(c);
             for (Edge e : edgesFromCity) {
                 City cityTo = (City) e.getDestination();
                 gc.strokeLine(c.getX(), c.getY(), cityTo.getX(), cityTo.getY());
@@ -455,6 +387,11 @@ public class PathFinder extends Application {
             //add them
             m.setId(m.city.getName());
             bottom.getChildren().add(m);
+            Label cityNameLabel = new Label(m.city.getName());
+            cityNameLabel.relocate(m.city.getX() - radius, m.city.getY() + radius);
+            cityNameLabel.setStyle("-fx-font-weight: bold");
+            bottom.getChildren().add(cityNameLabel);
+
             m.setOnMouseClicked(clickHandler);
         }
     }
@@ -472,11 +409,8 @@ public class PathFinder extends Application {
     class ClickHandler implements EventHandler<MouseEvent> {
         @Override
         public void handle(MouseEvent mouseEvent) {
-            System.out.println("ClickHandler active");
-
             if(mouseEvent.getSource() instanceof MapTile) {
                 MapTile m = (MapTile) mouseEvent.getSource();
-                System.out.println("City: " + m.city.getName());
 
                 if (mapTile1 == null && m != mapTile2) {
                     mapTile1 = m;
@@ -497,23 +431,13 @@ public class PathFinder extends Application {
                     m.paintCovered();
                 }
             }
-
-            //test TODO: TA BOR SEN!
-            if(mapTile1 == null)
-                testLabel1.setText("1: null");
-            else
-                testLabel1.setText(mapTile1.city.getName());
-            if(mapTile2 == null)
-                testLabel2.setText("2: null");
-            else
-                testLabel2.setText(mapTile2.city.getName());
         }
     }
 
     private void exit(){
-        //if changes has been made (check boolean unsavedChangesExist)
-
-        boolean okayToExit = dontSaveAlert("Exit without saving?");
+        boolean okayToExit = true;
+        if(unsavedChangesExist)
+            okayToExit = dontSaveAlert("Exit without saving?");
 
         if(okayToExit) {
             System.exit(0);
@@ -538,14 +462,10 @@ public class PathFinder extends Application {
 
             //känn av var dom trycker på kartan
             bottom.setOnMouseClicked(event -> {
-                System.out.println("Mouse clicked");
                 if(button.isDisabled()) {
 
                     double posX = event.getX();
                     double posY = event.getY();
-
-                    System.out.println("X: " + event.getX());
-                    System.out.println("Y: " + event.getY());
 
                     //då öppna ett alert
                     NewPlaceDialog newPlaceDialog = new NewPlaceDialog();
