@@ -1,3 +1,8 @@
+// PROG2 VT2022, Inlämningsuppgift, del 2
+// Grupp 055
+// Saga Liljenroth Dickman sali3923
+// Ruslan Musaev rumu4402
+
 package primary;
 
 import javafx.application.Application;
@@ -17,20 +22,12 @@ import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
-import javafx.scene.shape.Circle;
-import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
-
-import javafx.scene.shape.Shape;
 import javafx.stage.Stage;
-import primary.Exempelkoder.Bricka;
-import primary.Exempelkoder.Memory;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.lang.reflect.Array;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -71,6 +68,7 @@ public class PathFinder extends Application {
         mainStage.setTitle("PathFinder");
         // Image
         bottom = new Pane();
+        bottom.setId("outputArea");
         imageView = new ImageView();
         bottom.getChildren().add(imageView);
         root.setBottom(bottom);
@@ -83,31 +81,38 @@ public class PathFinder extends Application {
 
         // MenuBar declaration
         MenuBar menuBar = new MenuBar();
+        menuBar.setId("menu");
         VBox fileVBox = new VBox();
         fileVBox.getChildren().add(menuBar);
 
         // "file"-menu declaration
         Menu fileMenu = new Menu("File");
+        fileMenu.setId("menuFile");
         menuBar.getMenus().add(fileMenu);
 
         // "file"-menu items declarations
         MenuItem newMapItem = new MenuItem("New Map");
+        newMapItem.setId("menuNewMap");
         fileMenu.getItems().add(newMapItem);
         newMapItem.setOnAction(e -> newMap(root));
 
         MenuItem openItem = new MenuItem("Open");
+        openItem.setId("menuOpenFile");
         fileMenu.getItems().add(openItem);
         openItem.setOnAction(e -> open(root));
 
         MenuItem saveItem = new MenuItem("Save");
+        saveItem.setId("menuSaveFile");
         fileMenu.getItems().add(saveItem);
         saveItem.setOnAction(e -> save());
 
         MenuItem saveImageItem = new MenuItem("Save Image");
+        saveImageItem.setId("menuSaveImage");
         fileMenu.getItems().add(saveImageItem);
         saveImageItem.setOnAction(e -> saveImage());
 
         MenuItem exitItem = new MenuItem("Exit");
+        exitItem.setId("menuExit");
         fileMenu.getItems().add(exitItem);
         exitItem.setOnAction(e -> exit());
 
@@ -119,30 +124,36 @@ public class PathFinder extends Application {
 
         //button Find Path
         Button findPathButton = new Button("Find Path");
+        findPathButton.setId("btnFindPath");
         buttonsFlowPane.getChildren().add(findPathButton);
         findPathButton.setOnAction(new FindPathEventHandler(findPathButton));
 
         //button Show Connection
         Button showConnectionButton = new Button("Show Connection");
+        showConnectionButton.setId("btnShowConnection");
         buttonsFlowPane.getChildren().add(showConnectionButton);
         showConnectionButton.setOnAction(new ShowConnectionEventHandler(showConnectionButton));
 
         //button New Place
         Button newPlaceButton = new Button("New Place");
+        newPlaceButton.setId("btnNewPlace");
         buttonsFlowPane.getChildren().add(newPlaceButton);
         newPlaceButton.setOnAction(new NewPlaceEventHandler(newPlaceButton));
 
         //button New Connection
         Button newConnection = new Button("New Connection");
+        newConnection.setId("btnNewConnection");
         buttonsFlowPane.getChildren().add(newConnection);
         newConnection.setOnAction(new NewConnectionEventHandler(newConnection));
 
         //button Change Connection
         Button changeConnection = new Button("Change Connection");
+        changeConnection.setId("btnChangeConnection");
         buttonsFlowPane.getChildren().add(changeConnection);
         changeConnection.setOnAction(new ChangeConnectionEventHandler(changeConnection));
 
         root.setCenter(buttonsFlowPane);
+
 
         scene = new Scene(root, 618, 50);
         primaryStage.setScene(scene);
@@ -442,9 +453,20 @@ public class PathFinder extends Application {
                     bottom.getChildren().remove(m);
             }
             //add them
+            m.setId(m.city.getName());
             bottom.getChildren().add(m);
             m.setOnMouseClicked(clickHandler);
         }
+    }
+
+    private void showMustSelectTwoPlacesAlert(){
+        //error alert
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Error!");
+        alert.setHeaderText(null);
+        alert.setContentText("Two places must be selected!");
+
+        alert.showAndWait();
     }
 
     class ClickHandler implements EventHandler<MouseEvent> {
@@ -580,10 +602,7 @@ public class PathFinder extends Application {
 
                         alert.showAndWait();
                     }
-                    else if(newConnectionDialog.getWeight() == 0){
-                        //wrong
-                    }
-                    else{
+                    else if(!(newConnectionDialog.getWeight() == 0)){
                         activeListGraphMap.connect(from, to, newConnectionDialog.getName(), (int) newConnectionDialog.getWeight());
 
                         //deselect 1
@@ -600,18 +619,14 @@ public class PathFinder extends Application {
                         //draw stuff
                         drawListGraphEdges();
                         drawListGraphTiles();
+
                         unsavedChangesExist = true;
                     }
                 }
             }
             else{
                 //error alert
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Error!");
-                alert.setHeaderText(null);
-                alert.setContentText("Two places must be selected!");
-
-                alert.showAndWait();
+                showMustSelectTwoPlacesAlert();
             }
         }
     }
@@ -625,7 +640,30 @@ public class PathFinder extends Application {
 
         @Override
         public void handle(ActionEvent actionEvent){
+            if(mapTile1 != null && mapTile2 != null){
+                //path exists?
+                if(activeListGraphMap.pathExists(mapTile1.city, mapTile2.city)){
+                    //get path
+                    List<Edge<City>> path =  activeListGraphMap.getPath(mapTile1.city, mapTile2.city);
 
+                    //write out and show
+                    FindPathDialog findPathDialog = new FindPathDialog(mapTile1.city, mapTile2.city, path);
+                    findPathDialog.showAndWait();
+                }
+                else{
+                    //error alert - no edge between
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Error!");
+                    alert.setHeaderText(null);
+                    alert.setContentText("There is no path between " + mapTile1.city.getName() + " and " + mapTile2.city.getName() + "!");
+
+                    alert.showAndWait();
+                }
+            }
+            else{
+                //error alert
+                showMustSelectTwoPlacesAlert();
+            }
         }
     }
     public class ShowConnectionEventHandler implements EventHandler<ActionEvent>{
@@ -638,7 +676,27 @@ public class PathFinder extends Application {
 
         @Override
         public void handle(ActionEvent actionEvent){
+            if(mapTile1 != null && mapTile2 != null){
+                Edge<City> edge = activeListGraphMap.getEdgeBetween(mapTile1.city, mapTile2.city);
 
+                if(!(edge == null)){
+                    ShowConnectionDialog showConnectionDialog = new ShowConnectionDialog(mapTile1.city, mapTile2.city, edge);
+                    showConnectionDialog.showAndWait();
+                }
+                else{
+                    //error alert - no edge between
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Error!");
+                    alert.setHeaderText(null);
+                    alert.setContentText("There is no edge between " + mapTile1.city.getName() + " and " + mapTile2.city.getName() + "!");
+
+                    alert.showAndWait();
+                }
+            }
+            else{
+                //error alert
+                showMustSelectTwoPlacesAlert();
+            }
         }
     }
     public class ChangeConnectionEventHandler implements EventHandler<ActionEvent>{
@@ -651,7 +709,31 @@ public class PathFinder extends Application {
 
         @Override
         public void handle(ActionEvent actionEvent){
+            if(mapTile1 != null && mapTile2 != null){
+                Edge<City> edge = activeListGraphMap.getEdgeBetween(mapTile1.city, mapTile2.city);
 
+                if(!(edge == null)){
+                    ChangeConnectionDialog changeConnectionDialog = new ChangeConnectionDialog(mapTile1.city, mapTile2.city, edge);
+                    Optional<ButtonType> result = changeConnectionDialog.showAndWait();
+                    if (result.isPresent() && result.get() == ButtonType.OK){
+                        if(changeConnectionDialog.getWeight() != 0)
+                            activeListGraphMap.setConnectionWeight(mapTile1.city, mapTile2.city, (int) changeConnectionDialog.getWeight());
+                    }
+                }
+                else{
+                    //error alert - no edge between
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Error!");
+                    alert.setHeaderText(null);
+                    alert.setContentText("There is no edge between " + mapTile1.city.getName() + " and " + mapTile2.city.getName() + "!");
+
+                    alert.showAndWait();
+                }
+            }
+            else{
+                //error alert
+                showMustSelectTwoPlacesAlert();
+            }
         }
     }
 
@@ -678,6 +760,7 @@ public class PathFinder extends Application {
             return nameOfPlaceField.getText();
         }
     }
+
     class NewConnectionDialog extends Alert{
         private final TextField nameOfEdgeField = new TextField();
         private final TextField timeField = new TextField();
@@ -716,6 +799,112 @@ public class PathFinder extends Application {
                 alert.showAndWait();
             }
             return 0;
+        }
+    }
+
+    class ShowConnectionDialog extends Alert{
+
+        public ShowConnectionDialog(City from, City to, Edge<City> edge){
+            super(AlertType.CONFIRMATION);
+
+            GridPane grid = new GridPane();
+
+            grid.setAlignment(Pos.CENTER);
+            grid.setPadding(new Insets(10));
+            grid.setHgap(5);
+            grid.setVgap(10);
+
+            TextField nameOfEdgeField = new TextField();
+            grid.addRow(0, new Label("Name:"), nameOfEdgeField);
+            TextField timeField = new TextField();
+            grid.addRow(1, new Label("Time:"), timeField);
+
+            setHeaderText("Connection from " + from.getName() + " to " + to.getName());
+            setTitle("Connection");
+
+            nameOfEdgeField.setText(edge.getName());
+            timeField.setText( "" + edge.getWeight());
+
+            nameOfEdgeField.setDisable(true);
+            timeField.setDisable(true);
+            nameOfEdgeField.setStyle("-fx-opacity: 1;");
+            timeField.setStyle("-fx-opacity: 1;");
+
+            getDialogPane().setContent(grid);
+        }
+    }
+
+    class ChangeConnectionDialog extends Alert{
+
+        TextField timeField = new TextField();
+
+        public ChangeConnectionDialog(City from, City to, Edge<City> edge){
+            super(AlertType.CONFIRMATION);
+
+            GridPane grid = new GridPane();
+
+            grid.setAlignment(Pos.CENTER);
+            grid.setPadding(new Insets(10));
+            grid.setHgap(5);
+            grid.setVgap(10);
+
+            TextField nameOfEdgeField = new TextField();
+            grid.addRow(0, new Label("Name:"), nameOfEdgeField);
+
+            grid.addRow(1, new Label("Time:"), timeField);
+
+            setHeaderText("Connection from " + from.getName() + " to " + to.getName());
+            setTitle("Connection");
+
+            nameOfEdgeField.setText(edge.getName());
+            timeField.setText( "" + edge.getWeight());
+
+            nameOfEdgeField.setDisable(true);
+            nameOfEdgeField.setStyle("-fx-opacity: 1;");
+
+            getDialogPane().setContent(grid);
+        }
+
+        public double getWeight(){
+            try {
+                return Double.parseDouble(timeField.getText());
+            }
+            catch (Exception e) {
+                //error alert
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Error!");
+                alert.setHeaderText(null);
+                alert.setContentText("wrong input type!");
+
+                alert.showAndWait();
+            }
+            return 0;
+        }
+    }
+
+    class FindPathDialog extends Alert{
+
+        public FindPathDialog(City from, City to, List<Edge<City>> path){
+            super(AlertType.INFORMATION);
+
+            setTitle("Message");
+            setHeaderText("The Path from " + from + " to " + to + ":");
+
+            TextArea pathArea = new TextArea();
+
+            int totalWeight = 0;
+            for (Edge<City> edge : path) {
+                pathArea.setText(pathArea.getText() + edge.toString() +"\r\n");
+                totalWeight += edge.getWeight();
+            }
+            pathArea.setText(pathArea.getText() + "Total " + totalWeight);
+
+            getDialogPane().setContent(pathArea);
+            pathArea.setEditable(false);
+
+            pathArea.setWrapText(true);
+            pathArea.setMaxWidth(Double.MAX_VALUE);
+            pathArea.setMaxHeight(Double.MAX_VALUE);
         }
     }
 }

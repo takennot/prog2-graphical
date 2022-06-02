@@ -1,3 +1,8 @@
+// PROG2 VT2022, Inlämningsuppgift, del 1
+// Grupp 055
+// Saga Liljenroth Dickman sali3923
+// Ruslan Musaev rumu4402
+
 package primary;
 
 import java.io.Serializable;
@@ -179,7 +184,7 @@ public class ListGraph<T> implements Graph<T>, Serializable {
         }
     }
 
-        public List<Edge<T>> getPath(T from, T to){
+    public List<Edge<T>> getPath(T from, T to){
         //takes two nodes and returns a list (java.util.List) with borders which represents a path between these nodes through the graph, or null if there is no path between these two nodes.
 
         //In the simplest variant it is therefore sufficient that the method returns some path between the two nodes,

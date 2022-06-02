@@ -1,3 +1,8 @@
+// PROG2 VT2022, Inlämningsuppgift, del 1
+// Grupp 055
+// Saga Liljenroth Dickman sali3923
+// Ruslan Musaev rumu4402
+
 package primary;
 
 import java.util.*;
