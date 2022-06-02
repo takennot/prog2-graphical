@@ -2,15 +2,13 @@
 // Grupp 055
 // Saga Liljenroth Dickman sali3923
 // Ruslan Musaev rumu4402
-
 package primary;
-
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 
 public class MapTile extends Canvas {
-    public City city;
+    private City city;
 
     private double radius;
     private double diameter;
@@ -30,6 +28,8 @@ public class MapTile extends Canvas {
     public void paintCovered(){
         GraphicsContext gc = getGraphicsContext2D();
         gc.setFill(Color.BLUE);
+        //gc.fillRect(0, 0, getWidth(), getHeight());
+        //gc.fillOval(getWidth() - (getWidth() / 2), getHeight() - (getHeight() / 2), getWidth(), getHeight());
         gc.fillOval(0, 0, getWidth(), getHeight());
     }
 
@@ -38,5 +38,9 @@ public class MapTile extends Canvas {
         gc.clearRect(0, 0, getWidth(), getHeight());
         gc.setFill(Color.RED);
         gc.fillOval(0, 0, getWidth(), getHeight());
+    }
+
+    public City getCity(){
+        return city;
     }
 }

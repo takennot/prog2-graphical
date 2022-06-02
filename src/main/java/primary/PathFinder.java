@@ -2,9 +2,7 @@
 // Grupp 055
 // Saga Liljenroth Dickman sali3923
 // Ruslan Musaev rumu4402
-
 package primary;
-
 import javafx.application.Application;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
@@ -36,7 +34,7 @@ import java.util.*;
 
 public class PathFinder extends Application {
 
-    private boolean hasExpandedHeightOnce = false;
+    private boolean hasExpandedHeightOnce;
     private ListGraph activeListGraphMap = new ListGraph();
     private Pane bottom;
     private Canvas canvas;
@@ -45,7 +43,8 @@ public class PathFinder extends Application {
     private Scene scene;
     private HBox buttonsPane;
 
-    private MapTile mapTile1 = null, mapTile2 = null;
+    private MapTile mapTile1;
+    private MapTile mapTile2;
 
     private boolean unsavedChangesExist = true; //ändra false eller true idk
 
@@ -263,7 +262,7 @@ public class PathFinder extends Application {
                 e.printStackTrace();
             }
 
-                //draw it out
+            //draw it out
             //drawListGraph();
             drawListGraphEdges();
             drawListGraphTiles();
@@ -337,6 +336,44 @@ public class PathFinder extends Application {
         activeListGraphMap = new ListGraph();
     }
 
+    private void drawListGraph(){
+        //TODO: lines and nodes overlap. FIX IT!
+        //TODO: ska dom ens ritas ut 2 gånger? kan vi fixa det på något sätt?
+
+        //create a canvas
+        canvas = new Canvas(618,729);
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+        gc.moveTo(0,0);
+        gc.stroke();
+
+        int radius = 10;
+        int diameter = radius * 2;
+
+        //draw nodes and edges on a canvas
+        Set<City> nodes = activeListGraphMap.getNodes();
+        gc.setFill(Color.BLUE);
+
+        for (City c : nodes) {
+            //draw edges from city
+            gc.setStroke(Color.BLACK);
+            gc.setLineWidth(3);
+
+            Collection<Edge> edgesFromCity =  activeListGraphMap.getEdgesFrom(c); //funkar detta?
+            for (Edge e : edgesFromCity) {
+                City cityTo = (City) e.getDestination();
+                gc.strokeLine(c.getX(), c.getY(), cityTo.getX(), cityTo.getY());
+            }
+
+            //draw node
+
+            gc.fillOval(c.getX() - radius, c.getY() - radius, diameter, diameter);
+
+        }
+
+        //draw it on canvas
+        bottom.getChildren().add(canvas);
+    }
+
     private void drawListGraphEdges(){
 
         Set<City> nodes = activeListGraphMap.getNodes();
@@ -382,13 +419,14 @@ public class PathFinder extends Application {
         for (MapTile m : mapTiles) {
             //clear all tiles
             for (Node mapTile : bottom.getChildren()) {
-                    bottom.getChildren().remove(m);
+                bottom.getChildren().remove(m);
             }
             //add them
-            m.setId(m.city.getName());
+            //m.setId(m.getCity().getName());
             bottom.getChildren().add(m);
-            Label cityNameLabel = new Label(m.city.getName());
-            cityNameLabel.relocate(m.city.getX() - radius, m.city.getY() + radius);
+            m.setId(m.getCity().getName());
+            Label cityNameLabel = new Label(m.getCity().getName());
+            cityNameLabel.relocate(m.getCity().getX() - radius, m.getCity().getY() + radius);
             cityNameLabel.setStyle("-fx-font-weight: bold");
             bottom.getChildren().add(cityNameLabel);
 
@@ -505,8 +543,8 @@ public class PathFinder extends Application {
             if(mapTile1 != null && mapTile2 != null){
 
                 //Nodes
-                City from = mapTile1.city;
-                City to = mapTile2.city;
+                City from = mapTile1.getCity();
+                City to = mapTile2.getCity();
 
                 //connection alert dialog
                 NewConnectionDialog newConnectionDialog = new NewConnectionDialog(from, to);
@@ -562,12 +600,12 @@ public class PathFinder extends Application {
         public void handle(ActionEvent actionEvent){
             if(mapTile1 != null && mapTile2 != null){
                 //path exists?
-                if(activeListGraphMap.pathExists(mapTile1.city, mapTile2.city)){
+                if(activeListGraphMap.pathExists(mapTile1.getCity(), mapTile2.getCity())){
                     //get path
-                    List<Edge<City>> path =  activeListGraphMap.getPath(mapTile1.city, mapTile2.city);
+                    List<Edge<City>> path =  activeListGraphMap.getPath(mapTile1.getCity(), mapTile2.getCity());
 
                     //write out and show
-                    FindPathDialog findPathDialog = new FindPathDialog(mapTile1.city, mapTile2.city, path);
+                    FindPathDialog findPathDialog = new FindPathDialog(mapTile1.getCity(), mapTile2.getCity(), path);
                     findPathDialog.showAndWait();
                 }
                 else{
@@ -575,7 +613,7 @@ public class PathFinder extends Application {
                     Alert alert = new Alert(Alert.AlertType.ERROR);
                     alert.setTitle("Error!");
                     alert.setHeaderText(null);
-                    alert.setContentText("There is no path between " + mapTile1.city.getName() + " and " + mapTile2.city.getName() + "!");
+                    alert.setContentText("There is no path between " + mapTile1.getCity().getName() + " and " + mapTile2.getCity().getName() + "!");
 
                     alert.showAndWait();
                 }
@@ -597,10 +635,10 @@ public class PathFinder extends Application {
         @Override
         public void handle(ActionEvent actionEvent){
             if(mapTile1 != null && mapTile2 != null){
-                Edge<City> edge = activeListGraphMap.getEdgeBetween(mapTile1.city, mapTile2.city);
+                Edge<City> edge = activeListGraphMap.getEdgeBetween(mapTile1.getCity(), mapTile2.getCity());
 
                 if(!(edge == null)){
-                    ShowConnectionDialog showConnectionDialog = new ShowConnectionDialog(mapTile1.city, mapTile2.city, edge);
+                    ShowConnectionDialog showConnectionDialog = new ShowConnectionDialog(mapTile1.getCity(), mapTile2.getCity(), edge);
                     showConnectionDialog.showAndWait();
                 }
                 else{
@@ -608,7 +646,7 @@ public class PathFinder extends Application {
                     Alert alert = new Alert(Alert.AlertType.ERROR);
                     alert.setTitle("Error!");
                     alert.setHeaderText(null);
-                    alert.setContentText("There is no edge between " + mapTile1.city.getName() + " and " + mapTile2.city.getName() + "!");
+                    alert.setContentText("There is no edge between " + mapTile1.getCity().getName() + " and " + mapTile2.getCity().getName() + "!");
 
                     alert.showAndWait();
                 }
@@ -630,14 +668,14 @@ public class PathFinder extends Application {
         @Override
         public void handle(ActionEvent actionEvent){
             if(mapTile1 != null && mapTile2 != null){
-                Edge<City> edge = activeListGraphMap.getEdgeBetween(mapTile1.city, mapTile2.city);
+                Edge<City> edge = activeListGraphMap.getEdgeBetween(mapTile1.getCity(), mapTile2.getCity());
 
                 if(!(edge == null)){
-                    ChangeConnectionDialog changeConnectionDialog = new ChangeConnectionDialog(mapTile1.city, mapTile2.city, edge);
+                    ChangeConnectionDialog changeConnectionDialog = new ChangeConnectionDialog(mapTile1.getCity(), mapTile2.getCity(), edge);
                     Optional<ButtonType> result = changeConnectionDialog.showAndWait();
                     if (result.isPresent() && result.get() == ButtonType.OK){
                         if(changeConnectionDialog.getWeight() != 0)
-                            activeListGraphMap.setConnectionWeight(mapTile1.city, mapTile2.city, (int) changeConnectionDialog.getWeight());
+                            activeListGraphMap.setConnectionWeight(mapTile1.getCity(), mapTile2.getCity(), (int) changeConnectionDialog.getWeight());
                     }
                 }
                 else{
@@ -645,7 +683,7 @@ public class PathFinder extends Application {
                     Alert alert = new Alert(Alert.AlertType.ERROR);
                     alert.setTitle("Error!");
                     alert.setHeaderText(null);
-                    alert.setContentText("There is no edge between " + mapTile1.city.getName() + " and " + mapTile2.city.getName() + "!");
+                    alert.setContentText("There is no edge between " + mapTile1.getCity().getName() + " and " + mapTile2.getCity().getName() + "!");
 
                     alert.showAndWait();
                 }
@@ -661,7 +699,7 @@ public class PathFinder extends Application {
     class NewPlaceDialog extends Alert{
         private final TextField nameOfPlaceField = new TextField();
 
-        public NewPlaceDialog(){
+        NewPlaceDialog(){
             super(AlertType.CONFIRMATION);
             GridPane grid = new GridPane();
 
@@ -685,7 +723,7 @@ public class PathFinder extends Application {
         private final TextField nameOfEdgeField = new TextField();
         private final TextField timeField = new TextField();
 
-        public NewConnectionDialog(City from, City to){
+        NewConnectionDialog(City from, City to){
             super(AlertType.CONFIRMATION);
             GridPane grid = new GridPane();
 
@@ -724,7 +762,7 @@ public class PathFinder extends Application {
 
     class ShowConnectionDialog extends Alert{
 
-        public ShowConnectionDialog(City from, City to, Edge<City> edge){
+        ShowConnectionDialog(City from, City to, Edge<City> edge){
             super(AlertType.CONFIRMATION);
 
             GridPane grid = new GridPane();
@@ -756,9 +794,9 @@ public class PathFinder extends Application {
 
     class ChangeConnectionDialog extends Alert{
 
-        TextField timeField = new TextField();
+        private TextField timeField = new TextField();
 
-        public ChangeConnectionDialog(City from, City to, Edge<City> edge){
+        ChangeConnectionDialog(City from, City to, Edge<City> edge){
             super(AlertType.CONFIRMATION);
 
             GridPane grid = new GridPane();
@@ -804,7 +842,7 @@ public class PathFinder extends Application {
 
     class FindPathDialog extends Alert{
 
-        public FindPathDialog(City from, City to, List<Edge<City>> path){
+        FindPathDialog(City from, City to, List<Edge<City>> path){
             super(AlertType.INFORMATION);
 
             setTitle("Message");
