@@ -134,7 +134,7 @@ public class ListGraph<T> implements Graph<T>, Serializable {
         return edges;
     }
 
-    public Edge getEdgeBetween(T cityOne, T cityTwo){
+    public Edge<T> getEdgeBetween(T cityOne, T cityTwo){
         //If any of the nodes are missing in the graph, the exception should be NoSuchElementException is generated.
         if(!nodes.containsKey(cityOne) || !nodes.containsKey(cityTwo)){
             throw new NoSuchElementException("One of those cities is not in the map");
