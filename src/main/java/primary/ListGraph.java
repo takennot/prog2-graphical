@@ -11,7 +11,7 @@ import java.util.*;
 public class ListGraph<T> implements Graph<T>, Serializable {
 
     //Map med noder
-    private final Map<T, Set<Edge>> nodes = new HashMap<>();
+    private final Map<T, Set<Edge<T>>> nodes = new HashMap<>();
 
     public void add(T node){
         // Takes a node as argument and add it to the graph. If it already exists - then don't change anything
@@ -26,16 +26,16 @@ public class ListGraph<T> implements Graph<T>, Serializable {
         if(!nodes.containsKey(nodeToRemove)){
             throw new NoSuchElementException("No such node in the map");
         }
-            
+
         // create new HashSet with edges of the argument node
         // from edge name get destination
         // and call disconnect method
         // after for loop call nodes.remove(node)
-        
+
         Set<Edge<T>> edgeList = new HashSet<>(getEdgesFrom(nodeToRemove));
         for(Edge<T> edge : edgeList){
-                T cityName = (T) edge.getDestination();
-                disconnect(nodeToRemove, cityName);
+            T cityName = (T) edge.getDestination();
+            disconnect(nodeToRemove, cityName);
         }
         nodes.remove(nodeToRemove);
     }
@@ -56,12 +56,12 @@ public class ListGraph<T> implements Graph<T>, Serializable {
         }
 
         // Then we get the cities edges
-        Set<Edge> cityOneEdges = nodes.get(cityOne);
-        Set<Edge> cityTwoEdges = nodes.get(cityTwo);
+        Set<Edge<T>> cityOneEdges = nodes.get(cityOne);
+        Set<Edge<T>> cityTwoEdges = nodes.get(cityTwo);
 
         //add the new edge in the Sets
-        cityOneEdges.add(new Edge(cityTwo, name, weight));
-        cityTwoEdges.add(new Edge(cityOne, name, weight));
+        cityOneEdges.add(new Edge<T>(cityTwo, name, weight));
+        cityTwoEdges.add(new Edge<T>(cityOne, name, weight));
     }
 
     public void disconnect(T nodeOne, T nodeTwo){
@@ -76,8 +76,8 @@ public class ListGraph<T> implements Graph<T>, Serializable {
             throw new IllegalStateException("No edge between nodes");
         }
 
-        Edge edgeOne = getEdgeBetween(nodeOne, nodeTwo);
-        Edge edgeTwo = getEdgeBetween(nodeTwo, nodeOne);
+        Edge<T> edgeOne = getEdgeBetween(nodeOne, nodeTwo);
+        Edge<T> edgeTwo = getEdgeBetween(nodeTwo, nodeOne);
         nodes.get(nodeOne).remove(edgeOne);
         nodes.get(nodeTwo).remove(edgeTwo);
     }
@@ -88,9 +88,9 @@ public class ListGraph<T> implements Graph<T>, Serializable {
         if(newWeight < 0){
             throw new IllegalArgumentException("weight is negative");
         }
-        
+
         // If any of the nodes are missing in the graph or there is no edge between these two nodes, the exception NoSuchElementException from the java.util package must be generated.
-        
+
         //if nodes are missing
         Set<T> nodes = getNodes();
 
@@ -99,9 +99,9 @@ public class ListGraph<T> implements Graph<T>, Serializable {
         }
 
         //get edges
-        Edge edgeOne = getEdgeBetween(node1, node2);
-        Edge edgeTwo = getEdgeBetween(node2, node1);
-        
+        Edge<T> edgeOne = getEdgeBetween(node1, node2);
+        Edge<T> edgeTwo = getEdgeBetween(node2, node1);
+
         //sets this new weight as the new weight of the connection between these two nodes.
         edgeOne.setWeight(newWeight);
         edgeTwo.setWeight(newWeight);
@@ -126,22 +126,26 @@ public class ListGraph<T> implements Graph<T>, Serializable {
         }
 
         //the method takes a node and returns a copy of the collection of all edges leading from this node.
-        
+
         Collection<Edge<T>> edges = new HashSet<>();
-        
+
         edges = (Collection) nodes.get(node);
 
         return edges;
     }
 
-    public Edge getEdgeBetween(T cityOne, T cityTwo){
+    public Edge<T> getEdgeBetween(T cityOne, T cityTwo){
         //If any of the nodes are missing in the graph, the exception should be NoSuchElementException is generated.
+        if(cityOne instanceof MapTile || cityTwo instanceof MapTile){
+            throw new NoSuchElementException("One of the cities is a MapTile");
+        }
+
         if(!nodes.containsKey(cityOne) || !nodes.containsKey(cityTwo)){
-            throw new NoSuchElementException("One of those cities is not in the map");
+            throw new NoSuchElementException("One of those cities " + cityOne + "(" + nodes.containsKey(cityOne) + ")" + " and " + cityTwo + "(" + nodes.containsKey(cityTwo) + ")" + "is not in the map (" + nodes.toString() + ")");
         }
 
         //takes two nodes and returns the edge between these nodes.
-        for (Edge edge : nodes.get(cityOne)){
+        for (Edge<T> edge : nodes.get(cityOne)){
             if(edge.getDestination().equals(cityTwo))
                 return edge;
         }
@@ -165,7 +169,7 @@ public class ListGraph<T> implements Graph<T>, Serializable {
     public boolean pathExists(T from, T to){
         // takes two nodes and returns true if there is a path through the graph from one node to the other (possibly over many other nodes), otherwise false is returned.
         // If any of the nodes are not in the graph, false is also returned. Uses an aid method for depth-first search through a graph.
-        
+
         if(!nodes.containsKey(from) || !nodes.containsKey(to)){
             return false;
         }
@@ -195,7 +199,7 @@ public class ListGraph<T> implements Graph<T>, Serializable {
 
         LinkedList<T> queue = new LinkedList<>();
         queue.add(from);
-        
+
         while (!queue.isEmpty()) {
             T city = queue.pollFirst();
             for (Edge edge : nodes.get(city)) {

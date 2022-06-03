@@ -9,7 +9,6 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
 import javafx.scene.Cursor;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
@@ -35,8 +34,9 @@ import java.util.*;
 public class PathFinder extends Application {
 
     private boolean hasExpandedHeightOnce;
-    private ListGraph activeListGraphMap = new ListGraph();
+    private ListGraph<City> activeListGraphMap = new ListGraph<>();
     private Pane bottom;
+    //private Pane mapTilesBottom;
     private Canvas canvas;
     private Stage mainStage;
     private ImageView imageView = new ImageView();
@@ -46,7 +46,7 @@ public class PathFinder extends Application {
     private MapTile mapTile1;
     private MapTile mapTile2;
 
-    private boolean unsavedChangesExist = true; //ändra false eller true idk
+    private boolean unsavedChangesExist = false; //ändra false eller true idk
 
     public static void main(String[] args) {
         Application.launch(args);
@@ -63,8 +63,13 @@ public class PathFinder extends Application {
         mainStage.setTitle("PathFinder");
         // Image
         bottom = new Pane();
+        //mapTilesBottom = new Pane();
+        //mapTilesBottom.setId("outputArea");
         bottom.setId("outputArea");
+        //bottom.getChildren().add(imageView);
         bottom.getChildren().add(imageView);
+        //bottom.getChildren().add(mapTilesBottom);
+
         root.setBottom(bottom);
 
         // MenuBar declaration
@@ -163,6 +168,14 @@ public class PathFinder extends Application {
         //clear map
         if (okayToClearListMap) {
             //clear bottom
+            if (mapTile1 != null){
+                mapTile1.paintCovered();
+                mapTile1 = null;
+            }
+            if(mapTile2 != null){
+                mapTile2.paintCovered();
+                mapTile2 = null;
+            }
             clearBottom();
         }
     }
@@ -202,6 +215,14 @@ public class PathFinder extends Application {
 
         if(okayToOpen) {
             //clear bottom
+            if (mapTile1 != null){
+                mapTile1.paintCovered();
+                mapTile1 = null;
+            }
+            if(mapTile2 != null){
+                mapTile2.paintCovered();
+                mapTile2 = null;
+            }
             clearBottom();
 
             //finns "europa.graph"?
@@ -263,13 +284,22 @@ public class PathFinder extends Application {
             }
 
             //draw it out
-            //drawListGraph();
+            System.out.println("Open: draw Edges");
             drawListGraphEdges();
+            System.out.println("Open: draw Tiles");
             drawListGraphTiles();
         }
     }
 
     private void save(){
+        if (mapTile1 != null){
+            mapTile1.paintCovered();
+            mapTile1 = null;
+        }
+        if(mapTile2 != null){
+            mapTile2.paintCovered();
+            mapTile2 = null;
+        }
         Path filePath = Paths.get("europa.graph");
 
         try {
@@ -309,6 +339,14 @@ public class PathFinder extends Application {
 
     private void saveImage(){
         try{
+            if (mapTile1 != null){
+                mapTile1.paintCovered();
+                mapTile1 = null;
+            }
+            if(mapTile2 != null){
+                mapTile2.paintCovered();
+                mapTile2 = null;
+            }
             WritableImage image = bottom.snapshot(null, null);
             BufferedImage bufferedImage = SwingFXUtils.fromFXImage(image, null); //(null, null);
             ImageIO.write(bufferedImage, "png", new File("capture.png"));
@@ -321,57 +359,23 @@ public class PathFinder extends Application {
     private void clearBottom(){
         clearEdges();
         clearListGraph();
+        clearTiles();
+    }
+
+    private void clearTiles(){
+        //remove mapTiles
+        bottom.getChildren().clear();
+        bottom.getChildren().add(imageView);
+        if(canvas != null)
+            bottom.getChildren().add(canvas);
     }
 
     private void clearEdges(){
         bottom.getChildren().remove(canvas);
     }
 
-    private void clearTiles(){
-        //remove
-        bottom.getChildren().removeIf(n -> n instanceof MapTile);
-    }
-
     private void clearListGraph() {
-        activeListGraphMap = new ListGraph();
-    }
-
-    private void drawListGraph(){
-        //TODO: lines and nodes overlap. FIX IT!
-        //TODO: ska dom ens ritas ut 2 gånger? kan vi fixa det på något sätt?
-
-        //create a canvas
-        canvas = new Canvas(618,729);
-        GraphicsContext gc = canvas.getGraphicsContext2D();
-        gc.moveTo(0,0);
-        gc.stroke();
-
-        int radius = 10;
-        int diameter = radius * 2;
-
-        //draw nodes and edges on a canvas
-        Set<City> nodes = activeListGraphMap.getNodes();
-        gc.setFill(Color.BLUE);
-
-        for (City c : nodes) {
-            //draw edges from city
-            gc.setStroke(Color.BLACK);
-            gc.setLineWidth(3);
-
-            Collection<Edge> edgesFromCity =  activeListGraphMap.getEdgesFrom(c); //funkar detta?
-            for (Edge e : edgesFromCity) {
-                City cityTo = (City) e.getDestination();
-                gc.strokeLine(c.getX(), c.getY(), cityTo.getX(), cityTo.getY());
-            }
-
-            //draw node
-
-            gc.fillOval(c.getX() - radius, c.getY() - radius, diameter, diameter);
-
-        }
-
-        //draw it on canvas
-        bottom.getChildren().add(canvas);
+        activeListGraphMap = new ListGraph<City>();
     }
 
     private void drawListGraphEdges(){
@@ -389,45 +393,49 @@ public class PathFinder extends Application {
             gc.setStroke(Color.BLACK);
             gc.setLineWidth(3);
 
-            Collection<Edge> edgesFromCity =  activeListGraphMap.getEdgesFrom(c);
-            for (Edge e : edgesFromCity) {
-                City cityTo = (City) e.getDestination();
+            Collection<Edge<City>> edgesFromCity =  activeListGraphMap.getEdgesFrom(c);
+            for (Edge<City> e : edgesFromCity) {
+                City cityTo = e.getDestination();
                 gc.strokeLine(c.getX(), c.getY(), cityTo.getX(), cityTo.getY());
             }
         }
 
         //draw it on canvas
-        bottom.getChildren().add(canvas); //TODO: !!!!
+        bottom.getChildren().add(1, canvas); //TODO: !!!!
     }
 
     private void drawListGraphTiles(){
         int radius = 10;
-        int diameter = radius * 2;
 
         ClickHandler clickHandler = new ClickHandler();
-        Set<City> nodes = activeListGraphMap.getNodes();
+        Set<City> listGraphNodes = activeListGraphMap.getNodes();
 
-        //city node stuff
+        //create list with mapTiles
         List<MapTile> mapTiles = new ArrayList<>();
-        int i = 0;
-        for (City c: nodes) {
+        for (City c: listGraphNodes) {
             mapTiles.add(new MapTile(c, radius));
-            i++;
         }
+
+        clearTiles();
 
         //add tiles to bottom
         for (MapTile m : mapTiles) {
-            //clear all tiles
-            for (Node mapTile : bottom.getChildren()) {
-                bottom.getChildren().remove(m);
-            }
+//            //clear all tiles
+//            for (Node node : bottom.getChildren()) {
+//                bottom.getChildren().remove(m);
+//            }
+
             //add them
             //m.setId(m.getCity().getName());
+
             bottom.getChildren().add(m);
+            //mapTilesBottom.getChildren().add(m);
             m.setId(m.getCity().getName());
+
             Label cityNameLabel = new Label(m.getCity().getName());
             cityNameLabel.relocate(m.getCity().getX() - radius, m.getCity().getY() + radius);
             cityNameLabel.setStyle("-fx-font-weight: bold");
+            //mapTilesBottom.getChildren().add(cityNameLabel);
             bottom.getChildren().add(cityNameLabel);
 
             m.setOnMouseClicked(clickHandler);
@@ -496,6 +504,14 @@ public class PathFinder extends Application {
 
         @Override
         public void handle(ActionEvent actionEvent){
+            if (mapTile1 != null){
+                mapTile1.paintCovered();
+                mapTile1 = null;
+            }
+            if(mapTile2 != null){
+                mapTile2.paintCovered();
+                mapTile2 = null;
+            }
             //ändra muspekaren till "+"
             scene.setCursor(Cursor.CROSSHAIR);
             //disable newPlace button
@@ -573,7 +589,6 @@ public class PathFinder extends Application {
 
                         //clear stuff
                         clearEdges();
-                        clearTiles();
 
                         //ListGraph backup = new ListGraph();
 
@@ -721,7 +736,6 @@ public class PathFinder extends Application {
             return nameOfPlaceField.getText();
         }
     }
-
     class NewConnectionDialog extends Alert{
         private final TextField nameOfEdgeField = new TextField();
         private final TextField timeField = new TextField();
@@ -762,7 +776,6 @@ public class PathFinder extends Application {
             return 0;
         }
     }
-
     class ShowConnectionDialog extends Alert{
 
         ShowConnectionDialog(City from, City to, Edge<City> edge){
@@ -794,7 +807,6 @@ public class PathFinder extends Application {
             getDialogPane().setContent(grid);
         }
     }
-
     class ChangeConnectionDialog extends Alert{
 
         private TextField timeField = new TextField();
@@ -842,7 +854,6 @@ public class PathFinder extends Application {
             return 0;
         }
     }
-
     class FindPathDialog extends Alert{
 
         FindPathDialog(City from, City to, List<Edge<City>> path){
