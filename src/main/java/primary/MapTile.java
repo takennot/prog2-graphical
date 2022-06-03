@@ -8,7 +8,7 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 
 public class MapTile extends Canvas {
-    private City city;
+    private final City city;
 
     private double radius;
     private double diameter;
@@ -20,23 +20,22 @@ public class MapTile extends Canvas {
         diameter = radius * 2;
 
         relocate(city.getX() - radius, city.getY() - radius);
-        paintCovered();
+        paintNotSelected();
 
         this.city = city;
     }
 
-    public void paintCovered(){
-        GraphicsContext gc = getGraphicsContext2D();
-        gc.setFill(Color.BLUE);
-        //gc.fillRect(0, 0, getWidth(), getHeight());
-        //gc.fillOval(getWidth() - (getWidth() / 2), getHeight() - (getHeight() / 2), getWidth(), getHeight());
-        gc.fillOval(0, 0, getWidth(), getHeight());
-    }
-
-    public void paintUncovered(){
+    public void paintSelected(){
         GraphicsContext gc = getGraphicsContext2D();
         gc.clearRect(0, 0, getWidth(), getHeight());
         gc.setFill(Color.RED);
+        gc.fillOval(0, 0, getWidth(), getHeight());
+    }
+
+    public void paintNotSelected(){
+        GraphicsContext gc = getGraphicsContext2D();
+        gc.clearRect(0, 0, getWidth(), getHeight());
+        gc.setFill(Color.BLUE);
         gc.fillOval(0, 0, getWidth(), getHeight());
     }
 

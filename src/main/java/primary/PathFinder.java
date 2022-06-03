@@ -21,7 +21,6 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
-
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
@@ -36,17 +35,15 @@ public class PathFinder extends Application {
     private boolean hasExpandedHeightOnce;
     private ListGraph<City> activeListGraphMap = new ListGraph<>();
     private Pane bottom;
-    //private Pane mapTilesBottom;
     private Canvas canvas;
     private Stage mainStage;
-    private ImageView imageView = new ImageView();
+    private final ImageView imageView = new ImageView(); //TODO: ta bort final ifall det fuckar upp
     private Scene scene;
-    private HBox buttonsPane;
 
     private MapTile mapTile1;
     private MapTile mapTile2;
 
-    private boolean unsavedChangesExist = false; //ändra false eller true idk
+    private boolean unsavedChangesExist; //ändra false eller true idk
 
     public static void main(String[] args) {
         Application.launch(args);
@@ -63,12 +60,8 @@ public class PathFinder extends Application {
         mainStage.setTitle("PathFinder");
         // Image
         bottom = new Pane();
-        //mapTilesBottom = new Pane();
-        //mapTilesBottom.setId("outputArea");
         bottom.setId("outputArea");
-        //bottom.getChildren().add(imageView);
         bottom.getChildren().add(imageView);
-        //bottom.getChildren().add(mapTilesBottom);
 
         root.setBottom(bottom);
 
@@ -87,12 +80,12 @@ public class PathFinder extends Application {
         MenuItem newMapItem = new MenuItem("New Map");
         newMapItem.setId("menuNewMap");
         fileMenu.getItems().add(newMapItem);
-        newMapItem.setOnAction(e -> newMap(root));
+        newMapItem.setOnAction(e -> newMap());
 
         MenuItem openItem = new MenuItem("Open");
         openItem.setId("menuOpenFile");
         fileMenu.getItems().add(openItem);
-        openItem.setOnAction(e -> open(root));
+        openItem.setOnAction(e -> open());
 
         MenuItem saveItem = new MenuItem("Save");
         saveItem.setId("menuSaveFile");
@@ -113,7 +106,7 @@ public class PathFinder extends Application {
         root.setTop(menuBar);
 
         //Pane for buttons
-        buttonsPane = new HBox(10);
+        HBox buttonsPane = new HBox(10);
 
         //button Find Path
         Button findPathButton = new Button("Find Path");
@@ -155,7 +148,7 @@ public class PathFinder extends Application {
         //primaryStage.setHeight(50 + buttonsFlowPane.getHeight() + menuBar.getHeight());
     }
 
-    private void newMap(BorderPane root){
+    private void newMap(){
 
         setBackgroundImage("file:europa.gif");
 
@@ -169,13 +162,14 @@ public class PathFinder extends Application {
         if (okayToClearListMap) {
             //clear bottom
             if (mapTile1 != null){
-                mapTile1.paintCovered();
+                mapTile1.paintNotSelected();
                 mapTile1 = null;
             }
             if(mapTile2 != null){
-                mapTile2.paintCovered();
+                mapTile2.paintNotSelected();
                 mapTile2 = null;
             }
+            clearListGraph();
             clearBottom();
         }
     }
@@ -197,7 +191,7 @@ public class PathFinder extends Application {
     }
 
     private void setBackgroundImage(String fileName){
-        Image imageMap = new Image("file:europa.gif");
+        Image imageMap = new Image(fileName);
         imageView.setImage(imageMap);
 
         if (!hasExpandedHeightOnce){
@@ -206,7 +200,7 @@ public class PathFinder extends Application {
         }
     }
 
-    private void open(BorderPane root){
+    private void open(){
         //if changes has been made (skapa variabel)
         boolean okayToOpen = true;
         if(unsavedChangesExist) {
@@ -216,18 +210,19 @@ public class PathFinder extends Application {
         if(okayToOpen) {
             //clear bottom
             if (mapTile1 != null){
-                mapTile1.paintCovered();
+                mapTile1.paintNotSelected();
                 mapTile1 = null;
             }
             if(mapTile2 != null){
-                mapTile2.paintCovered();
+                mapTile2.paintNotSelected();
                 mapTile2 = null;
             }
+            clearListGraph();
             clearBottom();
 
             //finns "europa.graph"?
             try (BufferedReader reader = new BufferedReader(new FileReader(new File("europa.graph")))) {
-                //ja = open file
+
                 String line;
                 int lineNumber = 0;
 
@@ -237,7 +232,8 @@ public class PathFinder extends Application {
                     if (lineNumber == 1) {
                         //reads file-name
                         setBackgroundImage(line);
-                    } else if (lineNumber == 2) {
+                    }
+                    else if (lineNumber == 2) {
                         //läser in noder
                         String[] nodeValues = line.split(";");
 
@@ -246,9 +242,10 @@ public class PathFinder extends Application {
                             City newNode = new City(nodeValues[i], Float.parseFloat(nodeValues[i + 1]), Float.parseFloat(nodeValues[i + 2]));
                             activeListGraphMap.add(newNode);
                         }
-                    } else if (lineNumber >= 3) {
+                    }
+                    else if (lineNumber >= 3) {
                         //läser in edges
-                        String[] edgeValues = line.split(";");
+                        String[] edgeLineValues = line.split(";");
 
                         Set<City> nodesSet = activeListGraphMap.getNodes();
 
@@ -260,44 +257,44 @@ public class PathFinder extends Application {
                             nodesClone[index++] = (City) o;
                         }
 
-                        //TODO: fix
-                        for (int i = 0; i < edgeValues.length; i += 4) {
+                        for (int i = 0; i < edgeLineValues.length; i += 4) {
                             City firstCity = null;
                             City secondCity = null;
 
+                            // System.out.println(edgeLineValues[i] + edgeLineValues[i+1] + edgeLineValues[i+2] + edgeLineValues[i+3]);
+
                             for (int j = 0; j < nodes.length; j++) {
-                                if (nodesClone[j].getName().equals(edgeValues[i])) {
+                                if (nodesClone[j].getName().equals(edgeLineValues[i])) {
                                     firstCity = nodesClone[j];
-                                } else if (nodesClone[j].getName().equals(edgeValues[i + 1])) {
+                                } else if (nodesClone[j].getName().equals(edgeLineValues[i + 1])) {
                                     secondCity = nodesClone[j];
                                 }
                             }
 
-                            if(firstCity != null && secondCity != null && !activeListGraphMap.pathExists(firstCity, secondCity))
-                                activeListGraphMap.connect(firstCity, secondCity, edgeValues[i + 2], Integer.parseInt(edgeValues[i + 3]));
+                            if(firstCity != null && secondCity != null && activeListGraphMap.getEdgeBetween(firstCity, secondCity) == null)
+                                activeListGraphMap.connect(firstCity, secondCity, edgeLineValues[i + 2], Integer.parseInt(edgeLineValues[i + 3]));
                         }
                     }
                 }
             } catch (IOException e) {
-                //nej = ge felmeddelande!
                 e.printStackTrace();
             }
 
             //draw it out
-            System.out.println("Open: draw Edges");
+            //System.out.println("Open: draw Edges");
             drawListGraphEdges();
-            System.out.println("Open: draw Tiles");
+            //System.out.println("Open: draw Tiles");
             drawListGraphTiles();
         }
     }
 
     private void save(){
         if (mapTile1 != null){
-            mapTile1.paintCovered();
+            mapTile1.paintNotSelected();
             mapTile1 = null;
         }
         if(mapTile2 != null){
-            mapTile2.paintCovered();
+            mapTile2.paintNotSelected();
             mapTile2 = null;
         }
         Path filePath = Paths.get("europa.graph");
@@ -340,11 +337,11 @@ public class PathFinder extends Application {
     private void saveImage(){
         try{
             if (mapTile1 != null){
-                mapTile1.paintCovered();
+                mapTile1.paintNotSelected();
                 mapTile1 = null;
             }
             if(mapTile2 != null){
-                mapTile2.paintCovered();
+                mapTile2.paintNotSelected();
                 mapTile2 = null;
             }
             WritableImage image = bottom.snapshot(null, null);
@@ -357,9 +354,8 @@ public class PathFinder extends Application {
     }
 
     private void clearBottom(){
-        clearEdges();
-        clearListGraph();
-        clearTiles();
+        bottom.getChildren().clear();
+        bottom.getChildren().add(imageView);
     }
 
     private void clearTiles(){
@@ -375,7 +371,7 @@ public class PathFinder extends Application {
     }
 
     private void clearListGraph() {
-        activeListGraphMap = new ListGraph<City>();
+        activeListGraphMap = new ListGraph<>();
     }
 
     private void drawListGraphEdges(){
@@ -463,21 +459,21 @@ public class PathFinder extends Application {
 
                 if (mapTile1 == null && m != mapTile2) {
                     mapTile1 = m;
-                    m.paintUncovered();
+                    m.paintSelected();
                 }
                 else if (mapTile2 == null && m != mapTile1) {
                     mapTile2 = m;
-                    m.paintUncovered();
+                    m.paintSelected();
                 }
                 else if (m == mapTile1) {
                     //deselect
                     mapTile1 = null;
-                    m.paintCovered();
+                    m.paintNotSelected();
                 }
                 else if (m == mapTile2) {
                     //deselect
                     mapTile2 = null;
-                    m.paintCovered();
+                    m.paintNotSelected();
                 }
             }
         }
@@ -505,11 +501,11 @@ public class PathFinder extends Application {
         @Override
         public void handle(ActionEvent actionEvent){
             if (mapTile1 != null){
-                mapTile1.paintCovered();
+                mapTile1.paintNotSelected();
                 mapTile1 = null;
             }
             if(mapTile2 != null){
-                mapTile2.paintCovered();
+                mapTile2.paintNotSelected();
                 mapTile2 = null;
             }
             //ändra muspekaren till "+"
@@ -560,44 +556,55 @@ public class PathFinder extends Application {
         @Override
         public void handle(ActionEvent actionEvent){
             if(mapTile1 != null && mapTile2 != null){
+                if(activeListGraphMap.getEdgeBetween(mapTile1.getCity(), mapTile2.getCity()) != null) {
+                    //Nodes
+                    City from = mapTile1.getCity();
+                    City to = mapTile2.getCity();
 
-                //Nodes
-                City from = mapTile1.getCity();
-                City to = mapTile2.getCity();
+                    //connection alert dialog
+                    NewConnectionDialog newConnectionDialog = new NewConnectionDialog(from, to);
+                    Optional<ButtonType> result = newConnectionDialog.showAndWait();
 
-                //connection alert dialog
-                NewConnectionDialog newConnectionDialog = new NewConnectionDialog(from, to);
-                Optional<ButtonType> result = newConnectionDialog.showAndWait();
+                    if (result.isPresent() && result.get() == ButtonType.OK) {
+                        if (newConnectionDialog.getName().isEmpty()) {
+                            //error alert
+                            Alert alert = new Alert(Alert.AlertType.ERROR);
+                            alert.setTitle("Error!");
+                            alert.setHeaderText(null);
+                            alert.setContentText("Name cannot be empty!");
 
-                if (result.isPresent() && result.get() == ButtonType.OK) {
-                    if(newConnectionDialog.getName().isEmpty()){
-                        //error alert
-                        Alert alert = new Alert(Alert.AlertType.ERROR);
-                        alert.setTitle("Error!");
-                        alert.setHeaderText(null);
-                        alert.setContentText("Name cannot be empty!");
+                            alert.showAndWait();
+                        } else if (!(newConnectionDialog.getWeight() == 0)) {
+                            activeListGraphMap.connect(from, to, newConnectionDialog.getName(), (int) newConnectionDialog.getWeight());
 
-                        alert.showAndWait();
+                            //clear stuff
+                            clearEdges();
+
+                            //ListGraph backup = new ListGraph();
+
+                            //draw stuff
+                            drawListGraphEdges();
+                            //drawListGraphTiles();
+
+                            unsavedChangesExist = true;
+
+//                        //deselect 1
+//                        mapTile1.paintNotSelected();
+//                        mapTile1 = null;
+//
+//                        //deselect 2
+//                        mapTile2.paintNotSelected();
+//                        mapTile2 = null;
+                        }
                     }
-                    else if(!(newConnectionDialog.getWeight() == 0)){
-                        activeListGraphMap.connect(from, to, newConnectionDialog.getName(), (int) newConnectionDialog.getWeight());
-
-                        //deselect 1
-                        mapTile1 = null;
-                        //deselect 2
-                        mapTile2 = null;
-
-                        //clear stuff
-                        clearEdges();
-
-                        //ListGraph backup = new ListGraph();
-
-                        //draw stuff
-                        drawListGraphEdges();
-                        drawListGraphTiles();
-
-                        unsavedChangesExist = true;
-                    }
+                }
+                else{
+                    //alert edge already exists
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Error");
+                    alert.setHeaderText("Edge already exists");
+                    alert.setContentText("Edge between " + mapTile1.getCity().getName() + " and " + mapTile2.getCity().getName() + " already exists!");
+                    alert.showAndWait();
                 }
             }
             else{
