@@ -35,13 +35,15 @@ import java.util.*;
 
 public class PathFinder extends Application {
 
-    private boolean hasExpandedHeightOnce;
     private ListGraph<City> activeListGraphMap = new ListGraph<>();
-    private Pane bottom;
-    private Canvas canvas;
-    private Stage mainStage;
-    private final ImageView imageView = new ImageView();
+
     private Scene scene;
+    private Stage mainStage;
+    private Pane bottom;
+
+    private Canvas canvas;
+    private final ImageView imageView = new ImageView();
+    private boolean hasExpandedHeightOnce;
 
     private MapTile mapTile1;
     private MapTile mapTile2;
