@@ -71,8 +71,8 @@ public class PathFinder extends Application {
         // MenuBar declaration
         MenuBar menuBar = new MenuBar();
         menuBar.setId("menu");
-        VBox fileVBox = new VBox();
-        fileVBox.getChildren().add(menuBar);
+        //VBox fileVBox = new VBox();
+        //fileVBox.getChildren().add(menuBar);
 
         // "file"-menu declaration
         Menu fileMenu = new Menu("File");
