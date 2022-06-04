@@ -2,7 +2,9 @@
 // Grupp 055
 // Saga Liljenroth Dickman sali3923
 // Ruslan Musaev rumu4402
+
 package primary;
+
 import javafx.application.Application;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
@@ -22,7 +24,6 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
-
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
@@ -113,13 +114,13 @@ public class PathFinder extends Application {
         Button findPathButton = new Button("Find Path");
         findPathButton.setId("btnFindPath");
         buttonsPane.getChildren().add(findPathButton);
-        findPathButton.setOnAction(new FindPathEventHandler(findPathButton));
+        findPathButton.setOnAction(new FindPathEventHandler());
 
         //button Show Connection
         Button showConnectionButton = new Button("Show Connection");
         showConnectionButton.setId("btnShowConnection");
         buttonsPane.getChildren().add(showConnectionButton);
-        showConnectionButton.setOnAction(new ShowConnectionEventHandler(showConnectionButton));
+        showConnectionButton.setOnAction(new ShowConnectionEventHandler());
 
         //button New Place
         Button newPlaceButton = new Button("New Place");
@@ -137,7 +138,7 @@ public class PathFinder extends Application {
         Button changeConnection = new Button("Change Connection");
         changeConnection.setId("btnChangeConnection");
         buttonsPane.getChildren().add(changeConnection);
-        changeConnection.setOnAction(new ChangeConnectionEventHandler(changeConnection));
+        changeConnection.setOnAction(new ChangeConnectionEventHandler());
 
         root.setCenter(buttonsPane);
         buttonsPane.setAlignment(Pos.CENTER);
@@ -155,7 +156,7 @@ public class PathFinder extends Application {
         //if changes has been made (check boolean unsavedChangesExist)
         boolean okayToClearListMap = true;
         if(unsavedChangesExist) {
-            okayToClearListMap = dontSaveAlert("Create a new map without saving this one first?");
+            okayToClearListMap = confirmSaveAlert("Create a new map without saving this one first?");
         }
 
         //clear map
@@ -174,7 +175,7 @@ public class PathFinder extends Application {
         }
     }
 
-    private boolean dontSaveAlert(String header){
+    private boolean confirmSaveAlert(String header){
         if(bottom.getChildren().contains(canvas)) {
             //ask to save changes
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
@@ -204,7 +205,7 @@ public class PathFinder extends Application {
         //if changes has been made (skapa variabel)
         boolean okayToOpen = true;
         if(unsavedChangesExist) {
-            okayToOpen = dontSaveAlert("Open a file without saving this one first?");
+            okayToOpen = confirmSaveAlert("Open a file without saving this one first?");
         }
 
         if(okayToOpen) {
@@ -221,7 +222,7 @@ public class PathFinder extends Application {
             clearBottom();
 
             //finns "europa.graph"?
-            try (BufferedReader reader = new BufferedReader(new FileReader(new File("europa.graph")))) {
+            try (BufferedReader reader = new BufferedReader(new FileReader("europa.graph"))) {
 
                 String line;
                 int lineNumber = 0;
@@ -394,7 +395,7 @@ public class PathFinder extends Application {
         }
 
         //draw it on canvas
-        bottom.getChildren().add(1, canvas); //TODO: !!!!
+        bottom.getChildren().add(1, canvas);
     }
 
     private void drawListGraphTiles(){
@@ -447,8 +448,7 @@ public class PathFinder extends Application {
     class ClickHandler implements EventHandler<MouseEvent> {
         @Override
         public void handle(MouseEvent mouseEvent) {
-            if(mouseEvent.getSource() instanceof MapTile) {
-                MapTile m = (MapTile) mouseEvent.getSource();
+            if(mouseEvent.getSource() instanceof MapTile m) {
 
                 if (mapTile1 == null && m != mapTile2) {
                     mapTile1 = m;
@@ -475,7 +475,7 @@ public class PathFinder extends Application {
     private void exit(){
         boolean okayToExit = true;
         if(unsavedChangesExist)
-            okayToExit = dontSaveAlert("Exit without saving?");
+            okayToExit = confirmSaveAlert("Exit without saving?");
 
         if(okayToExit) {
             mainStage.fireEvent(new WindowEvent(mainStage, WindowEvent.WINDOW_CLOSE_REQUEST));
@@ -591,12 +591,6 @@ public class PathFinder extends Application {
     }
     public class FindPathEventHandler implements EventHandler<ActionEvent>{
 
-        private final Button button;
-
-        public FindPathEventHandler(Button button){
-            this.button = button;
-        }
-
         @Override
         public void handle(ActionEvent actionEvent){
             if(mapTile1 != null && mapTile2 != null){
@@ -627,12 +621,6 @@ public class PathFinder extends Application {
     }
     public class ShowConnectionEventHandler implements EventHandler<ActionEvent>{
 
-        private final Button button;
-
-        public ShowConnectionEventHandler(Button button){
-            this.button = button;
-        }
-
         @Override
         public void handle(ActionEvent actionEvent){
             if(mapTile1 != null && mapTile2 != null){
@@ -659,12 +647,6 @@ public class PathFinder extends Application {
         }
     }
     public class ChangeConnectionEventHandler implements EventHandler<ActionEvent>{
-
-        private final Button button;
-
-        public ChangeConnectionEventHandler(Button button){
-            this.button = button;
-        }
 
         @Override
         public void handle(ActionEvent actionEvent){
@@ -697,7 +679,7 @@ public class PathFinder extends Application {
     }
 
     //Button Dialogs/Alerts
-    class NewPlaceDialog extends Alert{
+    static class NewPlaceDialog extends Alert{
         private final TextField nameOfPlaceField = new TextField();
 
         NewPlaceDialog(){
@@ -719,7 +701,7 @@ public class PathFinder extends Application {
             return nameOfPlaceField.getText();
         }
     }
-    class NewConnectionDialog extends Alert{
+    static class NewConnectionDialog extends Alert{
         private final TextField nameOfEdgeField = new TextField();
         private final TextField timeField = new TextField();
 
@@ -759,7 +741,7 @@ public class PathFinder extends Application {
             return 0;
         }
     }
-    class ShowConnectionDialog extends Alert{
+    static class ShowConnectionDialog extends Alert{
 
         ShowConnectionDialog(City from, City to, Edge<City> edge){
             super(AlertType.CONFIRMATION);
@@ -791,9 +773,9 @@ public class PathFinder extends Application {
             getDialogPane().setContent(grid);
         }
     }
-    class ChangeConnectionDialog extends Alert{
+    static class ChangeConnectionDialog extends Alert{
 
-        private TextField timeField = new TextField();
+        private final TextField timeField = new TextField();
 
         ChangeConnectionDialog(City from, City to, Edge<City> edge){
             super(AlertType.CONFIRMATION);
@@ -838,7 +820,7 @@ public class PathFinder extends Application {
             return 0;
         }
     }
-    class FindPathDialog extends Alert{
+    static class FindPathDialog extends Alert{
 
         FindPathDialog(City from, City to, List<Edge<City>> path){
             super(AlertType.INFORMATION);
