@@ -147,6 +147,7 @@ public class PathFinder extends Application {
         primaryStage.setScene(scene);
         primaryStage.setResizable(false);
         primaryStage.show();
+        primaryStage.setOnCloseRequest(new ExitHandler());
     }
 
     private void newMap(){
@@ -674,6 +675,19 @@ public class PathFinder extends Application {
             else{
                 //error alert
                 showMustSelectTwoPlacesAlert();
+            }
+        }
+    }
+    public class ExitHandler implements EventHandler<WindowEvent>{
+        @Override
+        public void handle(WindowEvent windowEvent){
+            if (unsavedChangesExist){
+                Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                alert.setHeaderText("Exit without saving?");
+                alert.setContentText(null);
+                Optional<ButtonType> result = alert.showAndWait();
+                if (result.isPresent() && result.get() != ButtonType.OK)
+                    windowEvent.consume();
             }
         }
     }
