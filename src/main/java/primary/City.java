@@ -2,9 +2,7 @@
 // Grupp 055
 // Saga Liljenroth Dickman sali3923
 // Ruslan Musaev rumu4402
-
 package primary;
-
 import java.util.*;
 
 public class City {
@@ -13,11 +11,11 @@ public class City {
     private final float x;
     private final float y;
 
-    public City(String cityName, float xCoordinate, float yCoordinate){
+    public City(String cityName, float xcoordinate, float ycoordinate){
         this.name = cityName;
 
-        x = xCoordinate;
-        y = yCoordinate;
+        x = xcoordinate;
+        y = ycoordinate;
     }
 
     public String getName(){

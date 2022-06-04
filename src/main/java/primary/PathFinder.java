@@ -73,8 +73,6 @@ public class PathFinder extends Application {
         // MenuBar declaration
         MenuBar menuBar = new MenuBar();
         menuBar.setId("menu");
-        //VBox fileVBox = new VBox();
-        //fileVBox.getChildren().add(menuBar);
 
         // "file"-menu declaration
         Menu fileMenu = new Menu("File");
@@ -182,13 +180,12 @@ public class PathFinder extends Application {
         if(bottom.getChildren().contains(canvas)) {
             //ask to save changes
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-            alert.setTitle("Confirmation");
+            alert.setTitle("Warning!");
             alert.setHeaderText(header);
             alert.setContentText("Are you sure?");
 
             Optional<ButtonType> svar = alert.showAndWait();
-            if (svar.isPresent() && svar.get() == ButtonType.CANCEL)
-                return false;
+            return svar.isEmpty() || svar.get() != ButtonType.CANCEL;
         }
 
         return true;
@@ -476,13 +473,7 @@ public class PathFinder extends Application {
     }
 
     private void exit(){
-        boolean okayToExit = true;
-        if(unsavedChangesExist)
-            okayToExit = confirmSaveAlert("Exit without saving?");
-
-        if(okayToExit) {
-            mainStage.fireEvent(new WindowEvent(mainStage, WindowEvent.WINDOW_CLOSE_REQUEST));
-        }
+        mainStage.fireEvent(new WindowEvent(mainStage, WindowEvent.WINDOW_CLOSE_REQUEST));
     }
 
     //EventHandlers
@@ -662,6 +653,8 @@ public class PathFinder extends Application {
                     if (result.isPresent() && result.get() == ButtonType.OK){
                         if(changeConnectionDialog.getWeight() != 0)
                             activeListGraphMap.setConnectionWeight(mapTile1.getCity(), mapTile2.getCity(), (int) changeConnectionDialog.getWeight());
+
+                        unsavedChangesExist = true;
                     }
                 }
                 else{
@@ -684,10 +677,8 @@ public class PathFinder extends Application {
         @Override
         public void handle(WindowEvent windowEvent){
             if (unsavedChangesExist){
-                Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-                alert.setHeaderText("Exit without saving?");
-                alert.setContentText(null);
-                Optional<ButtonType> result = alert.showAndWait();
+                ExitDialog exitDialog = new ExitDialog();
+                Optional<ButtonType> result = exitDialog.showAndWait();
                 if (result.isPresent() && result.get() != ButtonType.OK)
                     windowEvent.consume();
             }
@@ -859,6 +850,14 @@ public class PathFinder extends Application {
             pathArea.setWrapText(true);
             pathArea.setMaxWidth(Double.MAX_VALUE);
             pathArea.setMaxHeight(Double.MAX_VALUE);
+        }
+    }
+    static class ExitDialog extends Alert{
+        ExitDialog(){
+            super(AlertType.CONFIRMATION);
+            setContentText("Unsaved changes, exit anyway?");
+            setHeaderText(null);
+            setTitle("Warning");
         }
     }
 }
