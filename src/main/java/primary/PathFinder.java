@@ -37,13 +37,13 @@ public class PathFinder extends Application {
     private Pane bottom;
     private Canvas canvas;
     private Stage mainStage;
-    private final ImageView imageView = new ImageView(); //TODO: ta bort final ifall det fuckar upp
+    private final ImageView imageView = new ImageView();
     private Scene scene;
 
     private MapTile mapTile1;
     private MapTile mapTile2;
 
-    private boolean unsavedChangesExist; //ändra false eller true idk
+    private boolean unsavedChangesExist;
 
     public static void main(String[] args) {
         Application.launch(args);
@@ -102,7 +102,6 @@ public class PathFinder extends Application {
         fileMenu.getItems().add(exitItem);
         exitItem.setOnAction(e -> exit());
 
-        // sticks the file's combobox to TOP border of root
         root.setTop(menuBar);
 
         //Pane for buttons
@@ -145,7 +144,6 @@ public class PathFinder extends Application {
         primaryStage.setScene(scene);
         primaryStage.setResizable(false);
         primaryStage.show();
-        //primaryStage.setHeight(50 + buttonsFlowPane.getHeight() + menuBar.getHeight());
     }
 
     private void newMap(){
@@ -261,8 +259,6 @@ public class PathFinder extends Application {
                             City firstCity = null;
                             City secondCity = null;
 
-                            // System.out.println(edgeLineValues[i] + edgeLineValues[i+1] + edgeLineValues[i+2] + edgeLineValues[i+3]);
-
                             for (int j = 0; j < nodes.length; j++) {
                                 if (nodesClone[j].getName().equals(edgeLineValues[i])) {
                                     firstCity = nodesClone[j];
@@ -281,9 +277,7 @@ public class PathFinder extends Application {
             }
 
             //draw it out
-            //System.out.println("Open: draw Edges");
             drawListGraphEdges();
-            //System.out.println("Open: draw Tiles");
             drawListGraphTiles();
         }
     }
@@ -379,7 +373,7 @@ public class PathFinder extends Application {
 
         Set<City> nodes = activeListGraphMap.getNodes();
 
-        //edge stuff atm
+        //edge stuff
         canvas = new Canvas(618,729);
         GraphicsContext gc = canvas.getGraphicsContext2D();
         gc.moveTo(0,0);
@@ -417,16 +411,8 @@ public class PathFinder extends Application {
 
         //add tiles to bottom
         for (MapTile m : mapTiles) {
-//            //clear all tiles
-//            for (Node node : bottom.getChildren()) {
-//                bottom.getChildren().remove(m);
-//            }
-
             //add them
-            //m.setId(m.getCity().getName());
-
             bottom.getChildren().add(m);
-            //mapTilesBottom.getChildren().add(m);
             m.setId(m.getCity().getName());
 
             m.getLayoutX();
@@ -539,7 +525,6 @@ public class PathFinder extends Application {
 
                     //add city to listGraph
                     activeListGraphMap.add(new City(nameOfCity, (float) posX, (float) posY));
-                    //drawListGraph();
                     drawListGraphEdges();
                     drawListGraphTiles();
                     unsavedChangesExist = true;
@@ -580,11 +565,8 @@ public class PathFinder extends Application {
                             //clear stuff
                             clearEdges();
 
-                            //ListGraph backup = new ListGraph();
-
                             //draw stuff
                             drawListGraphEdges();
-                            //drawListGraphTiles();
 
                             unsavedChangesExist = true;
                         }
@@ -712,7 +694,7 @@ public class PathFinder extends Application {
         }
     }
 
-    //Button Dialogs
+    //Button Dialogs/Alerts
     class NewPlaceDialog extends Alert{
         private final TextField nameOfPlaceField = new TextField();
 
@@ -797,9 +779,10 @@ public class PathFinder extends Application {
 
             nameOfEdgeField.setText(edge.getName());
             timeField.setText( "" + edge.getWeight());
-
+            // disables text fields
             nameOfEdgeField.setDisable(true);
             timeField.setDisable(true);
+            // disables "disabled" styles. They look normal now, but still un-editable
             nameOfEdgeField.setStyle("-fx-opacity: 1;");
             timeField.setStyle("-fx-opacity: 1;");
 

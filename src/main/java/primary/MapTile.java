@@ -19,7 +19,6 @@ public class MapTile extends Canvas {
         this.radius = radius;
         diameter = radius * 2;
 
-        //relocate(city.getX() - radius, city.getY() - radius);
         relocate(city.getX(), city.getY());
         paintNotSelected();
 
