@@ -130,7 +130,7 @@ public class PathFinder extends Application {
         Button newConnection = new Button("New Connection");
         newConnection.setId("btnNewConnection");
         buttonsPane.getChildren().add(newConnection);
-        newConnection.setOnAction(new NewConnectionEventHandler(newConnection));
+        newConnection.setOnAction(new NewConnectionEventHandler());
 
         //button Change Connection
         Button changeConnection = new Button("Change Connection");
@@ -297,6 +297,7 @@ public class PathFinder extends Application {
             mapTile2.paintNotSelected();
             mapTile2 = null;
         }
+
         Path filePath = Paths.get("europa.graph");
 
         try {
@@ -323,7 +324,7 @@ public class PathFinder extends Application {
             for (City c : nodes) {
                 Collection<Edge<City>> edges = activeListGraphMap.getEdgesFrom(c);
                 for (Edge<City> e : edges) {
-                    bw.write(c.getName() + ";" + e.getDestination() + ";" + e.getName() + ";" + e.getWeight() + ";");
+                    bw.write(c.getName() + ";" + e.getDestination() + ";" + e.getName() + ";" + e.getWeight());
                     bw.newLine();
                 }
             }
@@ -431,7 +432,7 @@ public class PathFinder extends Application {
             Label cityNameLabel = new Label(m.getCity().getName());
             cityNameLabel.relocate(m.getCity().getX() - radius, m.getCity().getY() + radius);
             cityNameLabel.setStyle("-fx-font-weight: bold");
-            //mapTilesBottom.getChildren().add(cityNameLabel);
+            cityNameLabel.setDisable(true);
             bottom.getChildren().add(cityNameLabel);
 
             m.setOnMouseClicked(clickHandler);
@@ -547,16 +548,11 @@ public class PathFinder extends Application {
     }
     public class NewConnectionEventHandler implements EventHandler<ActionEvent>{
 
-        private final Button button;
-
-        public NewConnectionEventHandler(Button button){
-            this.button = button;
-        }
-
         @Override
         public void handle(ActionEvent actionEvent){
+            //markeras 2 tiles?
             if(mapTile1 != null && mapTile2 != null){
-                if(activeListGraphMap.getEdgeBetween(mapTile1.getCity(), mapTile2.getCity()) != null) {
+                if(activeListGraphMap.getEdgeBetween(mapTile1.getCity(), mapTile2.getCity()) == null) {
                     //Nodes
                     City from = mapTile1.getCity();
                     City to = mapTile2.getCity();
@@ -587,14 +583,6 @@ public class PathFinder extends Application {
                             //drawListGraphTiles();
 
                             unsavedChangesExist = true;
-
-//                        //deselect 1
-//                        mapTile1.paintNotSelected();
-//                        mapTile1 = null;
-//
-//                        //deselect 2
-//                        mapTile2.paintNotSelected();
-//                        mapTile2 = null;
                         }
                     }
                 }

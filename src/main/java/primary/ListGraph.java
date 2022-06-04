@@ -137,6 +137,7 @@ public class ListGraph<T> implements Graph<T>, Serializable {
         //if(cityOne instanceof MapTile || cityTwo instanceof MapTile){
         //    throw new NoSuchElementException("One of the cities is a MapTile");
         //}
+
         //if the given cities is mapTiles, change them to cities
         if(cityOne instanceof MapTile){
             cityOne = (T) ((MapTile) cityOne).getCity();
@@ -174,6 +175,16 @@ public class ListGraph<T> implements Graph<T>, Serializable {
     }
 
     public boolean pathExists(T from, T to){
+        //if the given cities is mapTiles, change them to cities
+        if(from instanceof MapTile){
+            from = (T) ((MapTile) from).getCity();
+
+        }
+        if(to instanceof MapTile){
+            to = (T) ((MapTile) to).getCity();
+
+        }
+
         // takes two nodes and returns true if there is a path through the graph from one node to the other (possibly over many other nodes), otherwise false is returned.
         // If any of the nodes are not in the graph, false is also returned. Uses an aid method for depth-first search through a graph.
 
