@@ -24,6 +24,9 @@ public class MapTile extends Canvas {
         paintNotSelected();
 
         this.city = city;
+
+        setTranslateX(0 - radius);
+        setTranslateY(0 - radius);
     }
 
     public void paintSelected(){

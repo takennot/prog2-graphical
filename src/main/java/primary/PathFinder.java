@@ -429,10 +429,14 @@ public class PathFinder extends Application {
             //mapTilesBottom.getChildren().add(m);
             m.setId(m.getCity().getName());
 
+            m.getLayoutX();
+
             Label cityNameLabel = new Label(m.getCity().getName());
             cityNameLabel.relocate(m.getCity().getX() - radius, m.getCity().getY() + radius);
             cityNameLabel.setStyle("-fx-font-weight: bold");
             cityNameLabel.setDisable(true);
+            cityNameLabel.setStyle("-fx-opacity: 1;");
+
             bottom.getChildren().add(cityNameLabel);
 
             m.setOnMouseClicked(clickHandler);
