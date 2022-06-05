@@ -173,6 +173,8 @@ public class PathFinder extends Application {
             }
             clearListGraph();
             clearBottom();
+
+            unsavedChangesExist = true;
         }
     }
 
@@ -227,7 +229,7 @@ public class PathFinder extends Application {
                 String line;
                 int lineNumber = 0;
 
-                while((line = reader.readLine()) != null){
+                while((line = reader.readLine()) != null && !line.equals("")){
                     lineNumber++;
 
                     if (lineNumber == 1) {
@@ -282,6 +284,8 @@ public class PathFinder extends Application {
             //draw it out
             drawListGraphEdges();
             drawListGraphTiles();
+
+            unsavedChangesExist = true;
         }
     }
 
